@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nirmal Library — Bidhuna, Auraiya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F6F3EB;
+    --paper-raised: #EFEADC;
+    --ink: #211C16;
+    --ink-soft: #4A443B;
+    --navy: #16233D;
+    --navy-soft: #223252;
+    --brass: #B9812E;
+    --brass-bright: #D79A3C;
+    --line: rgba(33,28,22,0.14);
+    --line-on-navy: rgba(246,243,235,0.18);
+    --paper-on-navy: #F6F3EB;
+    --radius: 3px;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --paper: #171410;
+      --paper-raised: #201C16;
+      --ink: #EDE7DA;
+      --ink-soft: #C3BBAC;
+      --navy: #0D1526;
+      --navy-soft: #16223A;
+      --brass: #D9A346;
+      --brass-bright: #E9B75B;
+      --line: rgba(237,231,218,0.14);
+      --line-on-navy: rgba(246,243,235,0.16);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171410;
+    --paper-raised: #201C16;
+    --ink: #EDE7DA;
+    --ink-soft: #C3BBAC;
+    --navy: #0D1526;
+    --navy-soft: #16223A;
+    --brass: #D9A346;
+    --brass-bright: #E9B75B;
+    --line: rgba(237,231,218,0.14);
+    --line-on-navy: rgba(246,243,235,0.16);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  a { color: inherit; }
+  img { max-width: 100%; }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+  .measure { max-width: 62ch; }
+
+  /* ---------- Header ---------- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    gap: 20px;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: 'Source Serif 4', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .brand small {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+  nav.links {
+    display: flex;
+    gap: 26px;
+    font-size: 0.93rem;
+  }
+  nav.links a {
+    text-decoration: none;
+    color: var(--ink-soft);
+    border-bottom: 1px solid transparent;
+    padding-bottom: 2px;
+    transition: color .15s, border-color .15s;
+  }
+  nav.links a:hover { color: var(--ink); border-color: var(--brass); }
+  .call-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--navy);
+    color: var(--paper-on-navy) !important;
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .menu-toggle { display: none; }
+
+  @media (max-width: 760px) {
+    nav.links { display: none; }
+    .menu-toggle {
+      display: inline-flex;
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      color: var(--ink);
+    }
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 76px 0 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .eyebrow {
+    color: var(--brass);
+    font-size: 0.86rem;
+    font-weight: 500;
+    margin: 0 0 14px;
+  }
+  .hero h1 {
+    font-size: clamp(2.3rem, 4.6vw, 3.6rem);
+    line-height: 1.08;
+  }
+  .hero p.lede {
+    margin-top: 20px;
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 32px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 22px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--navy); color: var(--paper-on-navy); }
+  .btn-secondary { border-color: var(--ink); color: var(--ink); }
+  .btn svg { width: 18px; height: 18px; flex: none; }
+
+  .hero-facts {
+    display: flex;
+    gap: 28px;
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .hero-facts div span {
+    display: block;
+    font-family: 'Source Serif 4', serif;
+    font-size: 1.5rem;
+    color: var(--ink);
+  }
+  .hero-facts div small {
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+  }
+
+  .hero-art {
+    display: flex;
+    justify-content: center;
+  }
+  .hero-art svg { width: 100%; max-width: 340px; height: auto; }
+
+  /* ---------- Section shells ---------- */
+  section { padding: 72px 0; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  .section-head h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); }
+  .section-head p { color: var(--ink-soft); max-width: 40ch; margin: 0; }
+
+  .on-navy {
+    background: var(--navy);
+    color: var(--paper-on-navy);
+  }
+  .on-navy h2, .on-navy h3 { color: var(--paper-on-navy); }
+  .on-navy .section-head p, .on-navy .ink-soft-navy { color: rgba(246,243,235,0.68); }
+  .on-navy .divider { border-color: var(--line-on-navy); }
+
+  .on-raised { background: var(--paper-raised); }
+
+  /* ---------- About ---------- */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+  }
+  .about-grid .measure { color: var(--ink-soft); }
+  .about-grid .measure p + p { margin-top: 16px; }
+  .about-list {
+    list-style: none;
+    margin: 24px 0 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  .about-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.95rem;
+  }
+  .about-list li span:first-child { color: var(--ink-soft); }
+
+  /* ---------- Facilities ---------- */
+  .facility-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .facility-card {
+    background: var(--paper);
+    padding: 30px 26px;
+  }
+  .facility-card svg {
+    width: 26px;
+    height: 26px;
+    stroke: var(--brass);
+    margin-bottom: 18px;
+  }
+  .facility-card h3 { font-size: 1.08rem; margin-bottom: 8px; }
+  .facility-card p { margin: 0; color: var(--ink-soft); font-size: 0.92rem; }
+
+  @media (max-width: 860px) {
+    .facility-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .facility-grid { grid-template-columns: 1fr; }
+    .about-grid, .hero-grid { grid-template-columns: 1fr; }
+    .hero-art { order: -1; }
+  }
+
+  /* ---------- Gallery ---------- */
+  .collage {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 170px;
+    gap: 6px;
+  }
+  .collage-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+    border: 1px dashed var(--line);
+  }
+  .collage-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .collage-item .placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    text-align: center;
+    padding: 10px;
+  }
+  .collage-item .placeholder svg {
+    width: 26px;
+    height: 26px;
+    stroke: var(--brass);
+    opacity: 0.7;
+  }
+  .collage-item.span-2 { grid-column: span 2; }
+  .collage-item.row-2 { grid-row: span 2; }
+
+  @media (max-width: 760px) {
+    .collage { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 150px; }
+    .collage-item.span-2 { grid-column: span 2; }
+    .collage-item.row-2 { grid-row: span 1; }
+  }
+
+  /* ---------- Timings / membership ---------- */
+  .timing-grid {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  .hours-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+  .hours-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 10px 0;
+  }
+  .hours-row + .hours-row { border-top: 1px solid var(--line); }
+  .hours-row .days { color: var(--ink-soft); font-size: 0.92rem; }
+  .hours-row .time { font-family: 'Source Serif 4', serif; font-size: 1.15rem; }
+
+  .plan-note {
+    border-left: 2px solid var(--brass);
+    padding-left: 20px;
+    margin-top: 26px;
+  }
+
+  /* ---------- Location / contact ---------- */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+  }
+  .contact-card {
+    background: var(--paper);
+    border: 1px solid var(--line-on-navy);
+    border-radius: var(--radius);
+    padding: 26px;
+  }
+  .contact-card + .contact-card { margin-top: 16px; }
+  .contact-card .label {
+    font-size: 0.78rem;
+    color: rgba(246,243,235,0.6);
+    margin-bottom: 6px;
+  }
+  .contact-card .value {
+    font-family: 'Source Serif 4', serif;
+    font-size: 1.2rem;
+  }
+  .contact-card a { text-decoration: none; }
+  .contact-card a:hover { color: var(--brass-bright); }
+
+  address {
+    font-style: normal;
+    color: rgba(246,243,235,0.82);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+  .directions-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    color: var(--brass-bright);
+    text-decoration: none;
+    font-size: 0.93rem;
+    border-bottom: 1px solid rgba(217,163,70,0.4);
+    padding-bottom: 2px;
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    padding: 40px 0;
+    border-top: 1px solid var(--line);
+  }
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- Floating WhatsApp ---------- */
+  .wa-float {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #25D366;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+    z-index: 50;
+    text-decoration: none;
+    transition: transform .15s;
+  }
+  .wa-float:hover { transform: scale(1.06); }
+  .wa-float svg { width: 30px; height: 30px; }
+
+  @media (max-width: 760px) {
+    .about-grid, .timing-grid, .contact-grid { grid-template-columns: 1fr; }
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav-row">
+    <div class="brand">Nirmal Library <small>Bidhuna · Auraiya</small></div>
+    <nav class="links">
+      <a href="#about">About</a>
+      <a href="#facilities">Facilities</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#timings">Timings</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a class="call-btn" href="tel:+919675976147">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      Call the office
+    </a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">A reading room built for exam preparation</p>
+        <h1>A quiet seat, held for you — eight in the morning to eight at night, every day.</h1>
+        <p class="lede">Nirmal Library gives students in Bidhuna a cool, well-lit room to actually get through the day's target: reference books, e-study material, and a chair that doesn't fight your back after hour three.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://wa.me/919675976147?text=Hi%2C%20I%27d%20like%20to%20know%20about%20seat%20availability%20and%20membership%20at%20Nirmal%20Library." target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.47 14.38c-.29-.15-1.72-.85-1.99-.94-.27-.1-.46-.15-.66.15-.2.29-.76.94-.93 1.13-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.32-1.43-.86-.76-1.44-1.71-1.6-2-.17-.29-.02-.45.13-.6.13-.13.29-.34.44-.51.15-.17.19-.29.29-.49.1-.2.05-.37-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.5-.66-.5h-.56c-.2 0-.51.07-.78.37-.27.29-1.02 1-1.02 2.43 0 1.43 1.05 2.82 1.2 3.01.15.2 2.06 3.15 5 4.42.7.3 1.24.48 1.67.61.7.22 1.34.19 1.84.12.56-.08 1.72-.7 1.97-1.38.24-.68.24-1.26.17-1.38-.07-.12-.27-.2-.56-.35z"/><path d="M12.02 2C6.5 2 2.03 6.44 2.03 11.92c0 1.88.52 3.63 1.42 5.14L2 22l5.1-1.34a10.1 10.1 0 0 0 4.92 1.26h.01c5.52 0 9.98-4.44 9.98-9.92C21.99 6.44 17.54 2 12.02 2zm0 18.06h-.01a8.08 8.08 0 0 1-4.13-1.13l-.3-.18-3.02.8.8-2.93-.19-.3a8.06 8.06 0 0 1-1.24-4.32c0-4.46 3.65-8.09 8.13-8.09 2.17 0 4.21.85 5.75 2.38a8.03 8.03 0 0 1 2.38 5.72c0 4.46-3.65 8.05-8.12 8.05z"/></svg>
+            Message on WhatsApp
+          </a>
+          <a class="btn btn-secondary" href="tel:+917417780680">Call the owner</a>
+          <a class="btn btn-secondary" href="https://share.google/Zuv9sGyQj7GC4SBRj" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            See reviews on Google
+          </a>
+        </div>
+        <div class="hero-facts">
+          <div><span>8–8</span><small>open seven days a week</small></div>
+          <div><span>2 × 200 Mbps</span><small>dedicated internet lines</small></div>
+          <div><span>AC</span><small>study rooms, ergonomic chairs</small></div>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <svg viewBox="0 0 300 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="40" y="230" width="220" height="8" fill="var(--ink)" opacity="0.15"/>
+          <path d="M60 230 L60 90 Q60 80 70 80 L145 80 L145 230" stroke="var(--navy)" stroke-width="2.5" fill="none"/>
+          <path d="M240 230 L240 90 Q240 80 230 80 L155 80 L155 230" stroke="var(--navy)" stroke-width="2.5" fill="none"/>
+          <line x1="150" y1="80" x2="150" y2="230" stroke="var(--navy)" stroke-width="2.5"/>
+          <line x1="70" y1="105" x2="140" y2="105" stroke="var(--brass)" stroke-width="1.6"/>
+          <line x1="70" y1="130" x2="140" y2="130" stroke="var(--ink)" stroke-width="1.6" opacity="0.35"/>
+          <line x1="70" y1="155" x2="140" y2="155" stroke="var(--ink)" stroke-width="1.6" opacity="0.35"/>
+          <line x1="70" y1="180" x2="140" y2="180" stroke="var(--brass)" stroke-width="1.6"/>
+          <line x1="70" y1="205" x2="140" y2="205" stroke="var(--ink)" stroke-width="1.6" opacity="0.35"/>
+          <line x1="160" y1="105" x2="230" y2="105" stroke="var(--ink)" stroke-width="1.6" opacity="0.35"/>
+          <line x1="160" y1="130" x2="230" y2="130" stroke="var(--brass)" stroke-width="1.6"/>
+          <line x1="160" y1="155" x2="230" y2="155" stroke="var(--ink)" stroke-width="1.6" opacity="0.35"/>
+          <line x1="160" y1="180" x2="230" y2="180" stroke="var(--ink)" stroke-width="1.6" opacity="0.35"/>
+          <line x1="160" y1="205" x2="230" y2="205" stroke="var(--brass)" stroke-width="1.6"/>
+          <circle cx="150" cy="55" r="16" stroke="var(--brass)" stroke-width="2.5" fill="none"/>
+          <line x1="150" y1="71" x2="150" y2="80" stroke="var(--brass)" stroke-width="2.5"/>
+          <path d="M150 40 L150 55 L160 62" stroke="var(--brass)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="on-raised">
+    <div class="wrap about-grid">
+      <div>
+        <div class="section-head" style="margin-bottom:24px;">
+          <h2>Built around one thing: uninterrupted study time.</h2>
+        </div>
+        <div class="measure">
+          <p>Nirmal Library sits opposite the petrol pump on Surajpur Gali, near Bhagat Singh Chauraha in Bidhuna — a straightforward walk or ride for students across the tehsil. It's used every day by school and college students, and by candidates preparing for competitive and government exams, who need a room that stays cool, quiet, and connected for the whole day.</p>
+          <p>No shared desks with distractions, no unreliable Wi-Fi, no fighting for a plug point. Just a seat, held for you, for as long as your preparation needs it.</p>
+        </div>
+      </div>
+      <ul class="about-list">
+        <li><span>Location</span><span>Bhagat Singh Chauraha, Bidhuna</span></li>
+        <li><span>Open</span><span>7 days a week</span></li>
+        <li><span>Hours</span><span>8:00 AM – 8:00 PM</span></li>
+        <li><span>Internet</span><span>2 lines, 200 Mbps each</span></li>
+        <li><span>Seating</span><span>AC rooms, ergonomic chairs</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="facilities">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What's inside</h2>
+        <p>Everything set up for a full day of focused reading, not a quick visit.</p>
+      </div>
+      <div class="facility-grid">
+        <div class="facility-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <h3>Book collection &amp; e-study</h3>
+          <p>Reference books alongside digital study material, so you're not stuck without the one text you need.</p>
+        </div>
+        <div class="facility-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 18v2M18 18v2"/></svg>
+          <h3>Fully air-conditioned rooms</h3>
+          <p>Cool through the U.P. summer and comfortable through winter — a steady room temperature all year.</p>
+        </div>
+        <div class="facility-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20v-4a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4"/><path d="M6 12V9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3"/><path d="M2 20h20"/></svg>
+          <h3>Ergonomic chairs</h3>
+          <p>Proper back support for six, eight, ten-hour sessions — built for long sitting, not short visits.</p>
+        </div>
+        <div class="facility-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          <h3>Two 200 Mbps lines</h3>
+          <p>Two independent internet connections, so one line's downtime doesn't cost you your research or your test.</p>
+        </div>
+        <div class="facility-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <h3>Open 8 AM – 8 PM</h3>
+          <p>Every day of the week, including Sundays — your schedule doesn't have to work around ours.</p>
+        </div>
+        <div class="facility-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 6L9 17l-5-5"/></svg>
+          <h3>Membership plans</h3>
+          <p>Daily, monthly and long-term seats available. Get in touch and we'll set you up the same day.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gallery">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Inside the library</h2>
+        <p>A look at the study rooms, seating, and space before you visit.</p>
+      </div>
+      <div class="collage">
+        <div class="collage-item span-2 row-2">
+          <div class="placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M14 15l2.5-3 4.5 5"/></svg>
+            Study room
+          </div>
+        </div>
+        <div class="collage-item">
+          <div class="placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M14 15l2.5-3 4.5 5"/></svg>
+            Reading desks
+          </div>
+        </div>
+        <div class="collage-item">
+          <div class="placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M14 15l2.5-3 4.5 5"/></svg>
+            Book shelves
+          </div>
+        </div>
+        <div class="collage-item">
+          <div class="placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M14 15l2.5-3 4.5 5"/></svg>
+            Entrance
+          </div>
+        </div>
+        <div class="collage-item span-2">
+          <div class="placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M14 15l2.5-3 4.5 5"/></svg>
+            Seating area
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="timings" class="on-raised">
+    <div class="wrap timing-grid">
+      <div class="hours-card">
+        <h3 style="margin-bottom:18px; font-size:1.1rem;">Library hours</h3>
+        <div class="hours-row"><span class="days">Monday – Sunday</span><span class="time">8:00 AM – 8:00 PM</span></div>
+        <div class="plan-note">
+          <p style="margin:0; color:var(--ink-soft); font-size:0.92rem;">Open every day of the week, with no weekly closing day.</p>
+        </div>
+      </div>
+      <div>
+        <h2 style="font-size:1.7rem; margin-bottom:16px;">Membership plans</h2>
+        <p class="measure" style="color:var(--ink-soft);">Seats are offered as daily, monthly, and longer-term memberships, priced around how many hours and which room you need. Call the office or send a WhatsApp message with how long you're preparing for, and we'll confirm seat availability and pricing directly.</p>
+        <div class="hero-actions" style="margin-top:28px;">
+          <a class="btn btn-primary" href="https://wa.me/919675976147?text=Hi%2C%20I%27d%20like%20details%20on%20membership%20plans%20at%20Nirmal%20Library." target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.47 14.38c-.29-.15-1.72-.85-1.99-.94-.27-.1-.46-.15-.66.15-.2.29-.76.94-.93 1.13-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.32-1.43-.86-.76-1.44-1.71-1.6-2-.17-.29-.02-.45.13-.6.13-.13.29-.34.44-.51.15-.17.19-.29.29-.49.1-.2.05-.37-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.5-.66-.5h-.56c-.2 0-.51.07-.78.37-.27.29-1.02 1-1.02 2.43 0 1.43 1.05 2.82 1.2 3.01.15.2 2.06 3.15 5 4.42.7.3 1.24.48 1.67.61.7.22 1.34.19 1.84.12.56-.08 1.72-.7 1.97-1.38.24-.68.24-1.26.17-1.38-.07-.12-.27-.2-.56-.35z"/><path d="M12.02 2C6.5 2 2.03 6.44 2.03 11.92c0 1.88.52 3.63 1.42 5.14L2 22l5.1-1.34a10.1 10.1 0 0 0 4.92 1.26h.01c5.52 0 9.98-4.44 9.98-9.92C21.99 6.44 17.54 2 12.02 2zm0 18.06h-.01a8.08 8.08 0 0 1-4.13-1.13l-.3-.18-3.02.8.8-2.93-.19-.3a8.06 8.06 0 0 1-1.24-4.32c0-4.46 3.65-8.09 8.13-8.09 2.17 0 4.21.85 5.75 2.38a8.03 8.03 0 0 1 2.38 5.72c0 4.46-3.65 8.05-8.12 8.05z"/></svg>
+            Ask about plans
+          </a>
+          <a class="btn btn-secondary" href="tel:+919675976147">Call the office</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="on-navy">
+    <div class="wrap contact-grid">
+      <div>
+        <div class="section-head" style="margin-bottom:24px;">
+          <h2>Find us</h2>
+        </div>
+        <address>
+          Nirmal Library<br>
+          In front of Rangeela Enterprises, Surajpur Gali<br>
+          Opposite Petrol Pump, Bhagat Singh Chauraha<br>
+          Bidhuna, Auraiya, Uttar Pradesh — 206243
+        </address>
+        <a class="directions-link" href="https://www.google.com/maps/search/?api=1&query=Nirmal+Library+Bhagat+Singh+Chauraha+Bidhuna+Auraiya+206243" target="_blank" rel="noopener">
+          Get directions
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M7 17L17 7M7 7h10v10"/></svg>
+        </a>
+      </div>
+      <div>
+        <div class="contact-card">
+          <div class="label">Owner</div>
+          <div class="value"><a href="tel:+917417780680">+91 74177 80680</a></div>
+        </div>
+        <div class="contact-card">
+          <div class="label">Office</div>
+          <div class="value"><a href="tel:+919675976147">+91 96759 76147</a></div>
+        </div>
+        <div class="contact-card">
+          <div class="label">Email</div>
+          <div class="value" style="font-size:1rem;"><a href="mailto:librarynirmal1@gmail.com">librarynirmal1@gmail.com</a></div>
+        </div>
+        <div class="contact-card">
+          <div class="label">Google reviews</div>
+          <div class="value" style="font-size:1rem;"><a href="https://share.google/Zuv9sGyQj7GC4SBRj" target="_blank" rel="noopener">See what students say, and rate us →</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap footer-row">
+    <span>Nirmal Library, Bidhuna — Auraiya, U.P. 206243</span>
+    <span>Open 8:00 AM – 8:00 PM, all seven days</span>
+  </div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/919675976147?text=Hi%2C%20I%27m%20interested%20in%20Nirmal%20Library." target="_blank" rel="noopener" aria-label="Chat with Nirmal Library on WhatsApp">
+  <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.47 14.38c-.29-.15-1.72-.85-1.99-.94-.27-.1-.46-.15-.66.15-.2.29-.76.94-.93 1.13-.17.2-.34.22-.63.07-.29-.15-1.22-.45-2.32-1.43-.86-.76-1.44-1.71-1.6-2-.17-.29-.02-.45.13-.6.13-.13.29-.34.44-.51.15-.17.19-.29.29-.49.1-.2.05-.37-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.5-.66-.5h-.56c-.2 0-.51.07-.78.37-.27.29-1.02 1-1.02 2.43 0 1.43 1.05 2.82 1.2 3.01.15.2 2.06 3.15 5 4.42.7.3 1.24.48 1.67.61.7.22 1.34.19 1.84.12.56-.08 1.72-.7 1.97-1.38.24-.68.24-1.26.17-1.38-.07-.12-.27-.2-.56-.35z"/><path d="M12.02 2C6.5 2 2.03 6.44 2.03 11.92c0 1.88.52 3.63 1.42 5.14L2 22l5.1-1.34a10.1 10.1 0 0 0 4.92 1.26h.01c5.52 0 9.98-4.44 9.98-9.92C21.99 6.44 17.54 2 12.02 2zm0 18.06h-.01a8.08 8.08 0 0 1-4.13-1.13l-.3-.18-3.02.8.8-2.93-.19-.3a8.06 8.06 0 0 1-1.24-4.32c0-4.46 3.65-8.09 8.13-8.09 2.17 0 4.21.85 5.75 2.38a8.03 8.03 0 0 1 2.38 5.72c0 4.46-3.65 8.05-8.12 8.05z"/></svg>
+</a>
+
+</body>
+</html>
