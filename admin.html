@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Nirmal Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F6F3EB;
+    --paper-raised: #EFEADC;
+    --ink: #211C16;
+    --ink-soft: #4A443B;
+    --navy: #16233D;
+    --navy-soft: #223252;
+    --brass: #B9812E;
+    --brass-bright: #D79A3C;
+    --line: rgba(33,28,22,0.14);
+    --line-on-navy: rgba(246,243,235,0.18);
+    --paper-on-navy: #F6F3EB;
+    --radius: 3px;
+    --red: #B3392C;
+    --red-bg: rgba(179,57,44,0.12);
+    --orange: #C06A1E;
+    --orange-bg: rgba(192,106,30,0.13);
+    --amber: #B9812E;
+    --amber-bg: rgba(185,129,46,0.13);
+    --yellow: #A88A16;
+    --yellow-bg: rgba(168,138,22,0.14);
+    --green: #2E7D46;
+    --green-bg: rgba(46,125,70,0.12);
+    --gray: #6B6455;
+    --gray-bg: rgba(107,100,85,0.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #171410;
+      --paper-raised: #201C16;
+      --ink: #EDE7DA;
+      --ink-soft: #C3BBAC;
+      --navy: #0D1526;
+      --navy-soft: #16223A;
+      --brass: #D9A346;
+      --brass-bright: #E9B75B;
+      --line: rgba(237,231,218,0.14);
+      --line-on-navy: rgba(246,243,235,0.16);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171410;
+    --paper-raised: #201C16;
+    --ink: #EDE7DA;
+    --ink-soft: #C3BBAC;
+    --navy: #0D1526;
+    --navy-soft: #16223A;
+    --brass: #D9A346;
+    --brass-bright: #E9B75B;
+    --line: rgba(237,231,218,0.14);
+    --line-on-navy: rgba(246,243,235,0.16);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; color: var(--ink); margin: 0; letter-spacing: -0.01em; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  header {
+    position: sticky; top: 0; z-index: 40;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; gap: 16px; }
+  .brand { display: flex; align-items: baseline; gap: 10px; font-family: 'Source Serif 4', serif; font-size: 1.2rem; font-weight: 600; white-space: nowrap; }
+  .brand small { font-family: 'IBM Plex Sans', sans-serif; font-weight: 400; font-size: 0.72rem; color: var(--ink-soft); }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: var(--radius);
+    text-decoration: none; font-size: 0.9rem; font-weight: 500;
+    border: 1px solid transparent; cursor: pointer; font-family: inherit;
+    background: none; color: var(--ink);
+  }
+  .btn-primary { background: var(--navy); color: var(--paper-on-navy); border-color: var(--navy); }
+  .btn-primary:hover { background: var(--navy-soft); }
+  .btn-secondary { border-color: var(--ink); color: var(--ink); }
+  .btn-secondary:hover { background: var(--paper-raised); }
+  .btn-ghost { color: var(--ink-soft); padding: 8px 12px; }
+  .btn-ghost:hover { color: var(--ink); }
+  .btn-sm { padding: 7px 13px; font-size: 0.83rem; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn svg { width: 16px; height: 16px; flex: none; }
+
+  main { min-height: 70vh; }
+  .center-shell {
+    max-width: 460px; margin: 0 auto; padding: 72px 24px;
+  }
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+  .card h2 { font-size: 1.4rem; margin-bottom: 8px; }
+  .card p.hint { color: var(--ink-soft); font-size: 0.9rem; margin: 0 0 24px; }
+
+  label { display: block; font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 6px; }
+  input[type=text], input[type=password], select {
+    width: 100%; padding: 11px 13px; border-radius: var(--radius);
+    border: 1px solid var(--line); background: var(--paper);
+    color: var(--ink); font-family: inherit; font-size: 0.95rem;
+    margin-bottom: 18px;
+  }
+  input:focus, select:focus { outline: 2px solid var(--brass); outline-offset: 1px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .field-row { grid-template-columns: 1fr; } }
+
+  .error-box {
+    background: var(--red-bg); border: 1px solid var(--red);
+    color: var(--red); border-radius: var(--radius);
+    padding: 12px 14px; font-size: 0.87rem; margin-bottom: 18px;
+  }
+  .step-label { color: var(--brass); font-size: 0.8rem; font-weight: 500; margin-bottom: 10px; }
+
+  /* ---------- Dashboard ---------- */
+  .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 28px; }
+  .stat-card { background: var(--paper); padding: 18px 20px; }
+  .stat-card .num { font-family: 'Source Serif 4', serif; font-size: 1.6rem; }
+  .stat-card .lbl { font-size: 0.78rem; color: var(--ink-soft); margin-top: 2px; }
+  .stat-card.dot-red .num { color: var(--red); }
+  .stat-card.dot-orange .num { color: var(--orange); }
+  .stat-card.dot-amber .num { color: var(--amber); }
+  .stat-card.dot-yellow .num { color: var(--yellow); }
+  .stat-card.dot-green .num { color: var(--green); }
+  @media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } .stat-card:nth-child(5){grid-column: span 2;} }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+  .tab-btn {
+    background: none; border: none; font-family: inherit; font-size: 0.95rem;
+    padding: 11px 18px; color: var(--ink-soft); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--brass); font-weight: 500; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-box { position: relative; flex: 1; min-width: 200px; max-width: 320px; }
+  .search-box input { margin-bottom: 0; padding-left: 36px; }
+  .search-box svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--ink-soft); }
+  .toolbar-right { display: flex; gap: 10px; align-items: center; }
+
+  .table-shell { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--paper); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  thead th {
+    text-align: left; padding: 12px 16px; background: var(--paper-raised);
+    color: var(--ink-soft); font-weight: 500; font-size: 0.78rem;
+    border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  tbody td { padding: 13px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--paper-raised); }
+  .name-cell { font-weight: 500; }
+  .muted { color: var(--ink-soft); font-size: 0.85rem; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-orange { background: var(--orange-bg); color: var(--orange); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-gray { background: var(--gray-bg); color: var(--gray); }
+
+  .pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 4px; }
+  .pagination .info { color: var(--ink-soft); font-size: 0.85rem; }
+  .pagination .btns { display: flex; gap: 8px; }
+
+  .empty-state { text-align: center; padding: 60px 24px; color: var(--ink-soft); }
+  .empty-state svg { width: 34px; height: 34px; color: var(--brass); margin-bottom: 14px; opacity: 0.8; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 20px; font-size: 0.82rem; color: var(--ink-soft); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  .loading-row { display: flex; align-items: center; gap: 10px; padding: 40px; color: var(--ink-soft); justify-content: center; }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--brass); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .mapper-grid { display: grid; grid-template-columns: 1fr; gap: 2px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-bottom: 22px; }
+  .mapper-row { background: var(--paper); display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; padding: 12px 16px; align-items: center; }
+  .mapper-row label { margin: 0; }
+  .mapper-row select { margin: 0; }
+  .req-star { color: var(--red); }
+
+  footer.admin-footer { border-top: 1px solid var(--line); padding: 24px 0; margin-top: 40px; }
+  .footer-row { display: flex; justify-content: space-between; color: var(--ink-soft); font-size: 0.82rem; flex-wrap: wrap; gap: 10px; }
+
+  .switch-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .switch-row input { width: auto; margin: 0; }
+
+  @media (max-width: 700px) {
+    thead { display: none; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    tbody tr { border-bottom: 1px solid var(--line); padding: 12px 16px; }
+    tbody td { border: none; padding: 4px 0; display: flex; justify-content: space-between; gap: 12px; }
+    tbody td::before { content: attr(data-label); color: var(--ink-soft); font-size: 0.78rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav-row">
+    <div class="brand">Nirmal Library <small>Admin</small></div>
+    <div class="header-actions" id="headerActions"></div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap" id="app" style="padding-top: 32px; padding-bottom: 40px;"></div>
+</main>
+
+<footer class="admin-footer">
+  <div class="wrap footer-row">
+    <span>Nirmal Library — internal admin dashboard</span>
+    <span>Not linked from the public site. Keep this URL private.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =========================================================
+     STORAGE / CONFIG
+  ========================================================== */
+  const CONFIG_KEY = "nirmal_admin_config_v1";
+  const SESSION_UNLOCK_KEY = "nirmal_admin_unlocked";
+  const PAGE_SIZE = 10;
+
+  function loadConfig() {
+    try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || "null"); }
+    catch (e) { return null; }
+  }
+  function saveConfig(cfg) { localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg)); }
+  function clearConfig() { localStorage.removeItem(CONFIG_KEY); sessionStorage.removeItem(SESSION_UNLOCK_KEY); }
+
+  let config = loadConfig();
+  let wizard = { url: "", key: "", sheetNames: [], feeSheet: "", activeSheet: "", feeHeaders: [], activeHeaders: [] };
+
+  /* =========================================================
+     API CALLS
+  ========================================================== */
+  async function apiCall(baseUrl, key, params) {
+    const url = new URL(baseUrl);
+    url.searchParams.set("key", key);
+    Object.keys(params || {}).forEach(k => url.searchParams.set(k, params[k]));
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error("Network error (" + res.status + ")");
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    return json;
+  }
+
+  async function fetchSheetList(url, key) {
+    const json = await apiCall(url, key, { action: "sheets" });
+    return json.sheets || [];
+  }
+
+  async function fetchSheetsData(url, key, names) {
+    const json = await apiCall(url, key, { action: "data", sheets: names.join(",") });
+    return json.data || {};
+  }
+
+  /* =========================================================
+     RENDER HELPERS
+  ========================================================== */
+  const app = document.getElementById("app");
+  const headerActions = document.getElementById("headerActions");
+
+  function h(html) { const d = document.createElement("div"); d.innerHTML = html; return d.firstElementChild; }
+  function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+  /* =========================================================
+     ROUTER
+  ========================================================== */
+  function render() {
+    headerActions.innerHTML = "";
+    if (!config) { renderSetupStep1(); return; }
+    if (!sessionStorage.getItem(SESSION_UNLOCK_KEY)) { renderLogin(); return; }
+    renderHeaderActions();
+    renderDashboard();
+  }
+
+  function renderHeaderActions() {
+    const refreshBtn = h(`<button class="btn btn-ghost btn-sm" title="Refresh data">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      Refresh
+    </button>`);
+    refreshBtn.onclick = () => { dashboardState.data = null; renderDashboard(); };
+
+    const setupBtn = h(`<button class="btn btn-ghost btn-sm" title="Edit setup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Setup
+    </button>`);
+    setupBtn.onclick = () => { config = null; app.innerHTML = ""; renderSetupStep1(); };
+
+    const logoutBtn = h(`<button class="btn btn-secondary btn-sm">Lock</button>`);
+    logoutBtn.onclick = () => { sessionStorage.removeItem(SESSION_UNLOCK_KEY); render(); };
+
+    headerActions.appendChild(refreshBtn);
+    headerActions.appendChild(setupBtn);
+    headerActions.appendChild(logoutBtn);
+  }
+
+  /* =========================================================
+     SETUP WIZARD — STEP 1: connection
+  ========================================================== */
+  function renderSetupStep1() {
+    app.innerHTML = "";
+    const el = h(`
+      <div class="center-shell">
+        <div class="card">
+          <div class="step-label">Setup — step 1 of 3</div>
+          <h2>Connect to your spreadsheet</h2>
+          <p class="hint">Paste the Web app URL and secret key from the Apps Script you deployed (see Code.gs). Your sheet stays private — this script is the only door in.</p>
+          <div id="errBox"></div>
+          <label for="wa-url">Web app URL</label>
+          <input type="text" id="wa-url" placeholder="https://script.google.com/macros/s/…/exec" value="${escapeHtml(wizard.url)}">
+          <label for="wa-key">Secret key</label>
+          <input type="password" id="wa-key" placeholder="Paste the SECRET_KEY from Code.gs" value="${escapeHtml(wizard.key)}">
+          <button class="btn btn-primary" id="connectBtn" style="width:100%; justify-content:center; margin-top:6px;">Connect</button>
+        </div>
+      </div>
+    `);
+    app.appendChild(el);
+    document.getElementById("connectBtn").onclick = async () => {
+      const url = document.getElementById("wa-url").value.trim();
+      const key = document.getElementById("wa-key").value.trim();
+      const errBox = document.getElementById("errBox");
+      errBox.innerHTML = "";
+      if (!url || !key) { errBox.appendChild(h(`<div class="error-box">Enter both the Web app URL and the secret key.</div>`)); return; }
+      const btn = document.getElementById("connectBtn");
+      btn.disabled = true; btn.textContent = "Connecting…";
+      try {
+        const sheets = await fetchSheetList(url, key);
+        if (!sheets.length) throw new Error("Connected, but no tabs found in that spreadsheet.");
+        wizard.url = url; wizard.key = key; wizard.sheetNames = sheets;
+        renderSetupStep2();
+      } catch (e) {
+        errBox.appendChild(h(`<div class="error-box">Couldn't connect: ${escapeHtml(e.message)}. Check the URL ends in /exec, the key matches Code.gs exactly, and the deployment's access is set to "Anyone".</div>`));
+        btn.disabled = false; btn.textContent = "Connect";
+      }
+    };
+  }
+
+  /* =========================================================
+     SETUP WIZARD — STEP 2: pick tabs + map columns
+  ========================================================== */
+  function renderSetupStep2() {
+    app.innerHTML = "";
+    const opts = wizard.sheetNames.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("");
+    const el = h(`
+      <div class="center-shell" style="max-width:520px;">
+        <div class="card">
+          <div class="step-label">Setup — step 2 of 3</div>
+          <h2>Pick your two tabs</h2>
+          <p class="hint">Which tab holds fee payment data, and which holds your Google Form responses (active students)?</p>
+          <div id="errBox"></div>
+          <label>Fee data tab</label>
+          <select id="feeSheetSel">${opts}</select>
+          <label>Form responses / active students tab</label>
+          <select id="activeSheetSel">${opts}</select>
+          <div style="display:flex; gap:10px; margin-top:6px;">
+            <button class="btn btn-secondary" id="backBtn">Back</button>
+            <button class="btn btn-primary" id="nextBtn" style="flex:1; justify-content:center;">Next: map columns</button>
+          </div>
+        </div>
+      </div>
+    `);
+    app.appendChild(el);
+    // default the active-sheet select to a different tab than fee if possible
+    const activeSel = document.getElementById("activeSheetSel");
+    if (wizard.sheetNames.length > 1) activeSel.selectedIndex = 1;
+
+    document.getElementById("backBtn").onclick = renderSetupStep1;
+    document.getElementById("nextBtn").onclick = async () => {
+      const feeSheet = document.getElementById("feeSheetSel").value;
+      const activeSheet = document.getElementById("activeSheetSel").value;
+      const errBox = document.getElementById("errBox");
+      errBox.innerHTML = "";
+      const btn = document.getElementById("nextBtn");
+      btn.disabled = true; btn.textContent = "Loading columns…";
+      try {
+        const names = Array.from(new Set([feeSheet, activeSheet]));
+        const data = await fetchSheetsData(wizard.url, wizard.key, names);
+        if (data[feeSheet] && data[feeSheet].error) throw new Error(data[feeSheet].error);
+        if (data[activeSheet] && data[activeSheet].error) throw new Error(data[activeSheet].error);
+        wizard.feeSheet = feeSheet;
+        wizard.activeSheet = activeSheet;
+        wizard.feeHeaders = data[feeSheet].headers;
+        wizard.activeHeaders = data[activeSheet].headers;
+        renderSetupStep3();
+      } catch (e) {
+        errBox.appendChild(h(`<div class="error-box">${escapeHtml(e.message)}</div>`));
+        btn.disabled = false; btn.textContent = "Next: map columns";
+      }
+    };
+  }
+
+  const FEE_FIELDS = [
+    { key: "name", label: "Student name", required: true },
+    { key: "contact", label: "Phone / contact", required: false },
+    { key: "totalFee", label: "Total fee amount", required: false },
+    { key: "amountPaid", label: "Amount paid", required: false },
+    { key: "dueDate", label: "Fee due date", required: true },
+    { key: "status", label: "Payment status (text column, if you have one)", required: false }
+  ];
+  const ACTIVE_FIELDS = [
+    { key: "name", label: "Student name", required: true },
+    { key: "contact", label: "Phone / contact", required: false },
+    { key: "course", label: "Course / class / shift", required: false },
+    { key: "joinDate", label: "Join / admission date", required: false },
+    { key: "activeStatus", label: "Active status column (Yes/No, Active/Inactive)", required: false }
+  ];
+
+  function mapperFieldRow(field, headers) {
+    const opts = [`<option value="">— Not in sheet —</option>`]
+      .concat(headers.map(hd => `<option value="${escapeHtml(hd)}">${escapeHtml(hd)}</option>`))
+      .join("");
+    return `
+      <div class="mapper-row">
+        <label>${escapeHtml(field.label)}${field.required ? ' <span class="req-star">*</span>' : ''}</label>
+        <select data-field="${field.key}">${opts}</select>
+      </div>`;
+  }
+
+  function autoGuess(header, candidates) {
+    const h2 = header.toLowerCase();
+    return candidates.some(c => h2.includes(c));
+  }
+
+  function renderSetupStep3() {
+    app.innerHTML = "";
+    const el = h(`
+      <div class="center-shell" style="max-width:560px;">
+        <div class="card">
+          <div class="step-label">Setup — step 3 of 3</div>
+          <h2>Map your columns</h2>
+          <p class="hint">Tell the dashboard which column in each tab means what. Fields marked <span class="req-star">*</span> are needed to calculate fee pendency.</p>
+          <div id="errBox"></div>
+          <h3 style="font-size:1rem; margin: 18px 0 10px;">Fee data — "${escapeHtml(wizard.feeSheet)}"</h3>
+          <div class="mapper-grid" id="feeMapper">
+            ${FEE_FIELDS.map(f => mapperFieldRow(f, wizard.feeHeaders)).join("")}
+          </div>
+          <h3 style="font-size:1rem; margin: 18px 0 10px;">Active students — "${escapeHtml(wizard.activeSheet)}"</h3>
+          <div class="mapper-grid" id="activeMapper">
+            ${ACTIVE_FIELDS.map(f => mapperFieldRow(f, wizard.activeHeaders)).join("")}
+          </div>
+          <label for="pinInput" style="margin-top:6px;">Set a PIN to lock this admin page</label>
+          <input type="password" id="pinInput" placeholder="e.g. a 4+ digit PIN" inputmode="numeric">
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-secondary" id="backBtn">Back</button>
+            <button class="btn btn-primary" id="finishBtn" style="flex:1; justify-content:center;">Save &amp; open dashboard</button>
+          </div>
+        </div>
+      </div>
+    `);
+    app.appendChild(el);
+
+    // best-effort auto-guess selects based on header names
+    const guesses = {
+      name: ["name"], contact: ["phone", "contact", "mobile", "whatsapp"],
+      totalFee: ["total fee", "fee amount", "total amount", "course fee"],
+      amountPaid: ["paid", "amount received"], dueDate: ["due date", "due", "next due"],
+      status: ["status", "payment status"], course: ["course", "class", "shift", "batch"],
+      joinDate: ["join", "admission", "timestamp", "start date"],
+      activeStatus: ["active", "status"]
+    };
+    document.querySelectorAll("#feeMapper select, #activeMapper select").forEach(sel => {
+      const field = sel.getAttribute("data-field");
+      const cands = guesses[field] || [];
+      for (const opt of sel.options) {
+        if (opt.value && autoGuess(opt.value, cands)) { sel.value = opt.value; break; }
+      }
+    });
+
+    document.getElementById("backBtn").onclick = renderSetupStep2;
+    document.getElementById("finishBtn").onclick = () => {
+      const errBox = document.getElementById("errBox");
+      errBox.innerHTML = "";
+      const feeMap = {}, activeMap = {};
+      document.querySelectorAll("#feeMapper select").forEach(sel => feeMap[sel.getAttribute("data-field")] = sel.value || null);
+      document.querySelectorAll("#activeMapper select").forEach(sel => activeMap[sel.getAttribute("data-field")] = sel.value || null);
+      const pin = document.getElementById("pinInput").value.trim();
+
+      const missing = [];
+      if (!feeMap.name) missing.push("Fee data → Student name");
+      if (!feeMap.dueDate) missing.push("Fee data → Fee due date");
+      if (!activeMap.name) missing.push("Active students → Student name");
+      if (missing.length) {
+        errBox.appendChild(h(`<div class="error-box">Please map: ${missing.map(escapeHtml).join(", ")}.</div>`));
+        return;
+      }
+      if (!pin || pin.length < 4) {
+        errBox.appendChild(h(`<div class="error-box">Set a PIN of at least 4 characters.</div>`));
+        return;
+      }
+
+      config = {
+        url: wizard.url, key: wizard.key,
+        feeSheet: wizard.feeSheet, activeSheet: wizard.activeSheet,
+        feeMap: feeMap, activeMap: activeMap, pin: pin
+      };
+      saveConfig(config);
+      sessionStorage.setItem(SESSION_UNLOCK_KEY, "1");
+      render();
+    };
+  }
+
+  /* =========================================================
+     LOGIN (PIN gate)
+  ========================================================== */
+  function renderLogin() {
+    app.innerHTML = "";
+    const el = h(`
+      <div class="center-shell">
+        <div class="card">
+          <h2>Enter PIN</h2>
+          <p class="hint">This locks the page on this device/browser. It is not the security for your sheet — that's the secret key in your Apps Script.</p>
+          <div id="errBox"></div>
+          <input type="password" id="pinField" placeholder="PIN" autofocus>
+          <button class="btn btn-primary" id="unlockBtn" style="width:100%; justify-content:center;">Unlock</button>
+          <button class="btn btn-ghost btn-sm" id="resetBtn" style="width:100%; justify-content:center; margin-top:10px;">Reset setup</button>
+        </div>
+      </div>
+    `);
+    app.appendChild(el);
+    const pinField = document.getElementById("pinField");
+    function tryUnlock() {
+      if (pinField.value === config.pin) {
+        sessionStorage.setItem(SESSION_UNLOCK_KEY, "1");
+        render();
+      } else {
+        document.getElementById("errBox").innerHTML = `<div class="error-box">Incorrect PIN.</div>`;
+      }
+    }
+    document.getElementById("unlockBtn").onclick = tryUnlock;
+    pinField.addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+    document.getElementById("resetBtn").onclick = () => {
+      if (confirm("This clears your saved setup on this device. You'll need to reconnect. Continue?")) {
+        clearConfig(); config = null; render();
+      }
+    };
+  }
+
+  /* =========================================================
+     DASHBOARD
+  ========================================================== */
+  const dashboardState = {
+    tab: "fee",
+    data: null,
+    feePage: 1, activePage: 1,
+    feeSearch: "", activeSearch: "",
+    activeOnly: true
+  };
+
+  function cellText(cell) { return cell ? cell.text : ""; }
+  function cellDate(cell) {
+    if (!cell) return null;
+    if (cell.iso) { const d = new Date(cell.iso); return isNaN(d) ? null : d; }
+    if (cell.text) { const d = new Date(cell.text); return isNaN(d) ? null : d; }
+    return null;
+  }
+  function cellNumber(cell) {
+    if (!cell || cell.text === "") return null;
+    const n = parseFloat(String(cell.text).replace(/[^0-9.\-]/g, ""));
+    return isNaN(n) ? null : n;
+  }
+
+  function daysBetween(a, b) {
+    const ms = a.setHours(0,0,0,0) - b.setHours(0,0,0,0);
+    return Math.round(ms / 86400000);
+  }
+
+  function pendencyBucket(daysOverdue) {
+    if (daysOverdue > 30) return { label: "More than 30 days", cls: "red" };
+    if (daysOverdue > 15) return { label: "More than 15 days", cls: "orange" };
+    if (daysOverdue > 10) return { label: "More than 10 days", cls: "amber" };
+    if (daysOverdue > 7) return { label: "More than 1 week", cls: "yellow" };
+    if (daysOverdue >= 0) return { label: "Less than 1 week", cls: "green" };
+    return { label: "Not yet due", cls: "gray" };
+  }
+
+  function computeFeeRows(sheet) {
+    const map = config.feeMap;
+    const idx = key => map[key] ? sheet.headers.indexOf(map[key]) : -1;
+    const iName = idx("name"), iContact = idx("contact"), iTotal = idx("totalFee"),
+          iPaid = idx("amountPaid"), iDue = idx("dueDate"), iStatus = idx("status");
+    const today = new Date();
+
+    return sheet.rows.map(row => {
+      const name = iName >= 0 ? cellText(row[iName]) : "";
+      if (!name) return null;
+      const contact = iContact >= 0 ? cellText(row[iContact]) : "";
+      const total = iTotal >= 0 ? cellNumber(row[iTotal]) : null;
+      const paid = iPaid >= 0 ? cellNumber(row[iPaid]) : null;
+      const dueDate = iDue >= 0 ? cellDate(row[iDue]) : null;
+      const statusText = iStatus >= 0 ? cellText(row[iStatus]).toLowerCase() : "";
+
+      let isPending;
+      if (statusText) {
+        isPending = /pend|due|unpaid|overdue|no\b/.test(statusText) && !/^paid$/.test(statusText.trim()) ? true
+                    : /paid/.test(statusText) && !/unpaid/.test(statusText) ? false
+                    : null;
+        if (isPending === null) isPending = (total != null && paid != null) ? (paid + 0.5 < total) : (dueDate ? daysBetween(new Date(), new Date(dueDate)) >= 0 : false);
+      } else if (total != null && paid != null) {
+        isPending = paid + 0.5 < total;
+      } else if (dueDate) {
+        isPending = daysBetween(new Date(), new Date(dueDate)) >= 0;
+      } else {
+        isPending = false;
+      }
+
+      const pendingAmount = (total != null && paid != null) ? Math.max(total - paid, 0) : null;
+      const daysOverdue = dueDate ? daysBetween(new Date(), new Date(dueDate)) : null;
+      const bucket = isPending ? pendencyBucket(daysOverdue == null ? -1 : daysOverdue) : { label: "Paid", cls: "green" };
+
+      return { name, contact, total, paid, pendingAmount, dueDate, isPending, daysOverdue, bucket };
+    }).filter(Boolean);
+  }
+
+  function computeActiveRows(sheet) {
+    const map = config.activeMap;
+    const idx = key => map[key] ? sheet.headers.indexOf(map[key]) : -1;
+    const iName = idx("name"), iContact = idx("contact"), iCourse = idx("course"),
+          iJoin = idx("joinDate"), iActive = idx("activeStatus");
+
+    return sheet.rows.map(row => {
+      const name = iName >= 0 ? cellText(row[iName]) : "";
+      if (!name) return null;
+      const contact = iContact >= 0 ? cellText(row[iContact]) : "";
+      const course = iCourse >= 0 ? cellText(row[iCourse]) : "";
+      const joinDate = iJoin >= 0 ? cellText(row[iJoin]) : "";
+      let activeFlag = true;
+      if (iActive >= 0) {
+        const t = cellText(row[iActive]).toLowerCase().trim();
+        activeFlag = !(t === "no" || t === "inactive" || t === "false" || t === "0" || t === "left" || t === "dropped");
+      }
+      return { name, contact, course, joinDate, active: activeFlag };
+    }).filter(Boolean);
+  }
+
+  async function renderDashboard() {
+    if (!dashboardState.data) {
+      app.innerHTML = `<div class="loading-row"><div class="spinner"></div> Loading data from your spreadsheet…</div>`;
+      try {
+        const names = Array.from(new Set([config.feeSheet, config.activeSheet]));
+        const data = await fetchSheetsData(config.url, config.key, names);
+        if (data[config.feeSheet] && data[config.feeSheet].error) throw new Error(data[config.feeSheet].error);
+        if (data[config.activeSheet] && data[config.activeSheet].error) throw new Error(data[config.activeSheet].error);
+        dashboardState.data = {
+          fee: computeFeeRows(data[config.feeSheet]),
+          active: computeActiveRows(data[config.activeSheet])
+        };
+      } catch (e) {
+        app.innerHTML = "";
+        app.appendChild(h(`
+          <div class="center-shell">
+            <div class="error-box">Couldn't load data: ${escapeHtml(e.message)}</div>
+          </div>
+        `));
+        return;
+      }
+    }
+    drawDashboard();
+  }
+
+  function drawDashboard() {
+    const { fee, active } = dashboardState.data;
+    app.innerHTML = "";
+
+    const tabsEl = h(`
+      <div class="tabs">
+        <button class="tab-btn ${dashboardState.tab === 'fee' ? 'active' : ''}" data-tab="fee">Fee payment status</button>
+        <button class="tab-btn ${dashboardState.tab === 'active' ? 'active' : ''}" data-tab="active">Active students</button>
+      </div>
+    `);
+    tabsEl.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.onclick = () => { dashboardState.tab = btn.getAttribute("data-tab"); drawDashboard(); };
+    });
+    app.appendChild(tabsEl);
+
+    const body = document.createElement("div");
+    app.appendChild(body);
+    if (dashboardState.tab === "fee") drawFeeTab(body, fee);
+    else drawActiveTab(body, active);
+  }
+
+  function drawFeeTab(container, rows) {
+    const pending = rows.filter(r => r.isPending);
+    const buckets = { red: 0, orange: 0, amber: 0, yellow: 0, green: 0 };
+    pending.forEach(r => { if (buckets[r.bucket.cls] !== undefined) buckets[r.bucket.cls]++; });
+
+    const stats = h(`
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num">${rows.length}</div><div class="lbl">Total fee records</div></div>
+        <div class="stat-card dot-red"><div class="num">${buckets.red}</div><div class="lbl">More than 30 days</div></div>
+        <div class="stat-card dot-orange"><div class="num">${buckets.orange}</div><div class="lbl">More than 15 days</div></div>
+        <div class="stat-card dot-amber"><div class="num">${buckets.amber}</div><div class="lbl">More than 10 days</div></div>
+        <div class="stat-card dot-yellow"><div class="num">${buckets.yellow}</div><div class="lbl">More than 1 week</div></div>
+      </div>
+    `);
+    container.appendChild(stats);
+
+    const legend = h(`
+      <div class="legend">
+        <span><i style="background:var(--red)"></i>&gt; 30 days</span>
+        <span><i style="background:var(--orange)"></i>&gt; 15 days</span>
+        <span><i style="background:var(--amber)"></i>&gt; 10 days</span>
+        <span><i style="background:var(--yellow)"></i>&gt; 1 week</span>
+        <span><i style="background:var(--green)"></i>&lt; 1 week / paid</span>
+      </div>
+    `);
+    container.appendChild(legend);
+
+    const toolbar = h(`
+      <div class="toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="feeSearch" placeholder="Search by name…" value="${escapeHtml(dashboardState.feeSearch)}">
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-secondary btn-sm" id="exportFeeBtn">Export CSV</button>
+        </div>
+      </div>
+    `);
+    container.appendChild(toolbar);
+    toolbar.querySelector("#feeSearch").oninput = (e) => { dashboardState.feeSearch = e.target.value; dashboardState.feePage = 1; drawFeeTab(container, rows); };
+    // re-render replaces DOM so search input loses focus by nature of the simple approach — mitigate by only redrawing table+pagination
+    let filtered = rows.filter(r => r.name.toLowerCase().includes(dashboardState.feeSearch.toLowerCase()));
+    filtered.sort((a, b) => (b.isPending - a.isPending) || ((b.daysOverdue || -999) - (a.daysOverdue || -999)));
+
+    toolbar.querySelector("#exportFeeBtn").onclick = () => exportCsv("fee-status.csv", filtered.map(r => ({
+      Name: r.name, Contact: r.contact, "Total Fee": r.total ?? "", "Amount Paid": r.paid ?? "",
+      "Pending Amount": r.pendingAmount ?? "", "Due Date": r.dueDate ? new Date(r.dueDate).toLocaleDateString() : "",
+      Status: r.isPending ? r.bucket.label : "Paid"
+    })));
+
+    const tableHolder = document.createElement("div");
+    container.appendChild(tableHolder);
+    renderFeeTable(tableHolder, filtered);
+  }
+
+  function renderFeeTable(holder, filtered) {
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (dashboardState.feePage > totalPages) dashboardState.feePage = totalPages;
+    const start = (dashboardState.feePage - 1) * PAGE_SIZE;
+    const pageRows = filtered.slice(start, start + PAGE_SIZE);
+
+    if (!filtered.length) {
+      holder.innerHTML = `<div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <div>No matching fee records.</div>
+      </div>`;
+      return;
+    }
+
+    const rowsHtml = pageRows.map(r => `
+      <tr>
+        <td data-label="Student" class="name-cell">${escapeHtml(r.name)}</td>
+        <td data-label="Contact" class="muted">${escapeHtml(r.contact || "—")}</td>
+        <td data-label="Total fee">${r.total != null ? "₹" + r.total.toLocaleString("en-IN") : "—"}</td>
+        <td data-label="Paid">${r.paid != null ? "₹" + r.paid.toLocaleString("en-IN") : "—"}</td>
+        <td data-label="Pending">${r.isPending && r.pendingAmount != null ? "₹" + r.pendingAmount.toLocaleString("en-IN") : (r.isPending ? "—" : "₹0")}</td>
+        <td data-label="Due date">${r.dueDate ? new Date(r.dueDate).toLocaleDateString("en-IN") : "—"}</td>
+        <td data-label="Status"><span class="badge badge-${r.bucket.cls}">${escapeHtml(r.bucket.label)}</span></td>
+      </tr>
+    `).join("");
+
+    holder.innerHTML = `
+      <div class="table-shell">
+        <table>
+          <thead><tr><th>Student</th><th>Contact</th><th>Total fee</th><th>Paid</th><th>Pending</th><th>Due date</th><th>Status</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="info">Showing ${start + 1}–${start + pageRows.length} of ${filtered.length}</div>
+        <div class="btns">
+          <button class="btn btn-secondary btn-sm" id="feePrev" ${dashboardState.feePage <= 1 ? "disabled" : ""}>Previous</button>
+          <button class="btn btn-secondary btn-sm" id="feeNext" ${dashboardState.feePage >= totalPages ? "disabled" : ""}>Next</button>
+        </div>
+      </div>
+    `;
+    const prevBtn = holder.querySelector("#feePrev"), nextBtn = holder.querySelector("#feeNext");
+    if (prevBtn) prevBtn.onclick = () => { dashboardState.feePage--; renderFeeTable(holder, filtered); };
+    if (nextBtn) nextBtn.onclick = () => { dashboardState.feePage++; renderFeeTable(holder, filtered); };
+  }
+
+  function drawActiveTab(container, rows) {
+    const activeCount = rows.filter(r => r.active).length;
+    const stats = h(`
+      <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="stat-card"><div class="num">${rows.length}</div><div class="lbl">Total form responses</div></div>
+        <div class="stat-card dot-green"><div class="num">${activeCount}</div><div class="lbl">Active students</div></div>
+        <div class="stat-card"><div class="num">${rows.length - activeCount}</div><div class="lbl">Inactive / dropped</div></div>
+      </div>
+    `);
+    container.appendChild(stats);
+
+    const toolbar = h(`
+      <div class="toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="activeSearch" placeholder="Search by name…" value="${escapeHtml(dashboardState.activeSearch)}">
+        </div>
+        <div class="toolbar-right">
+          <label style="display:flex; align-items:center; gap:8px; margin:0; font-size:0.85rem;">
+            <input type="checkbox" id="activeOnlyChk" ${dashboardState.activeOnly ? "checked" : ""} style="width:auto; margin:0;"> Active only
+          </label>
+          <button class="btn btn-secondary btn-sm" id="exportActiveBtn">Export CSV</button>
+        </div>
+      </div>
+    `);
+    container.appendChild(toolbar);
+    toolbar.querySelector("#activeSearch").oninput = (e) => { dashboardState.activeSearch = e.target.value; dashboardState.activePage = 1; drawActiveTab(container, rows); };
+    toolbar.querySelector("#activeOnlyChk").onchange = (e) => { dashboardState.activeOnly = e.target.checked; dashboardState.activePage = 1; drawActiveTab(container, rows); };
+
+    let filtered = rows.filter(r => r.name.toLowerCase().includes(dashboardState.activeSearch.toLowerCase()));
+    if (dashboardState.activeOnly) filtered = filtered.filter(r => r.active);
+
+    toolbar.querySelector("#exportActiveBtn").onclick = () => exportCsv("active-students.csv", filtered.map(r => ({
+      Name: r.name, Contact: r.contact, Course: r.course, "Join Date": r.joinDate, Status: r.active ? "Active" : "Inactive"
+    })));
+
+    const tableHolder = document.createElement("div");
+    container.appendChild(tableHolder);
+    renderActiveTable(tableHolder, filtered);
+  }
+
+  function renderActiveTable(holder, filtered) {
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (dashboardState.activePage > totalPages) dashboardState.activePage = totalPages;
+    const start = (dashboardState.activePage - 1) * PAGE_SIZE;
+    const pageRows = filtered.slice(start, start + PAGE_SIZE);
+
+    if (!filtered.length) {
+      holder.innerHTML = `<div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
+        <div>No matching students.</div>
+      </div>`;
+      return;
+    }
+
+    const rowsHtml = pageRows.map(r => `
+      <tr>
+        <td data-label="Student" class="name-cell">${escapeHtml(r.name)}</td>
+        <td data-label="Contact" class="muted">${escapeHtml(r.contact || "—")}</td>
+        <td data-label="Course">${escapeHtml(r.course || "—")}</td>
+        <td data-label="Joined">${escapeHtml(r.joinDate || "—")}</td>
+        <td data-label="Status"><span class="badge ${r.active ? 'badge-green' : 'badge-gray'}">${r.active ? "Active" : "Inactive"}</span></td>
+      </tr>
+    `).join("");
+
+    holder.innerHTML = `
+      <div class="table-shell">
+        <table>
+          <thead><tr><th>Student</th><th>Contact</th><th>Course</th><th>Joined</th><th>Status</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="info">Showing ${start + 1}–${start + pageRows.length} of ${filtered.length}</div>
+        <div class="btns">
+          <button class="btn btn-secondary btn-sm" id="actPrev" ${dashboardState.activePage <= 1 ? "disabled" : ""}>Previous</button>
+          <button class="btn btn-secondary btn-sm" id="actNext" ${dashboardState.activePage >= totalPages ? "disabled" : ""}>Next</button>
+        </div>
+      </div>
+    `;
+    const prevBtn = holder.querySelector("#actPrev"), nextBtn = holder.querySelector("#actNext");
+    if (prevBtn) prevBtn.onclick = () => { dashboardState.activePage--; renderActiveTable(holder, filtered); };
+    if (nextBtn) nextBtn.onclick = () => { dashboardState.activePage++; renderActiveTable(holder, filtered); };
+  }
+
+  function exportCsv(filename, rows) {
+    if (!rows.length) return;
+    const headers = Object.keys(rows[0]);
+    const lines = [headers.join(",")].concat(rows.map(r => headers.map(hd => {
+      const v = String(r[hd] == null ? "" : r[hd]).replace(/"/g, '""');
+      return /[",\n]/.test(v) ? `"${v}"` : v;
+    }).join(",")));
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+  }
+
+  /* =========================================================
+     INIT
+  ========================================================== */
+  render();
+})();
+</script>
+</body>
+</html>
