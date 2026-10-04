@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nirmal Library, Bidhuna</title>
+<style>
+:root{--bg:#fbf8f2;--card:#fff;--tx:#23201b;--mu:#6d665b;--ac:#1f5f4a;--ac2:#c9892b;--bd:#e5dfd2;--bad:#b3402f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171612;--card:#201e19;--tx:#efe9dc;--mu:#a39b8b;--ac:#4fb48f;--ac2:#e0a447;--bd:#38342b;--bad:#e5776a}}
+:root[data-theme="dark"]{--bg:#171612;--card:#201e19;--tx:#efe9dc;--mu:#a39b8b;--ac:#4fb48f;--ac2:#e0a447;--bd:#38342b;--bad:#e5776a}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 Georgia,'Times New Roman',serif}
+h1,h2,h3{margin:0 0 .4em;line-height:1.2}
+.w{max-width:1000px;margin:auto;padding:0 18px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--bd);flex-wrap:wrap;gap:8px}
+nav b{font-size:1.25rem;color:var(--ac)}nav a{margin-left:16px;color:var(--tx);text-decoration:none;cursor:pointer;font-family:system-ui,sans-serif;font-size:.95rem}
+.hero{padding:56px 0 40px}.hero h1{font-size:clamp(2rem,6vw,3.2rem)}.hero p{color:var(--mu);max-width:560px;font-size:1.1rem}
+.btn{display:inline-block;background:var(--ac);color:#fff;border:0;padding:10px 18px;border-radius:8px;font:600 .95rem system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.btn.o{background:none;border:1px solid var(--ac);color:var(--ac)}.btn.s{padding:5px 10px;font-size:.8rem}.btn.r{background:var(--bad)}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:16px 0 40px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px}
+.c h3{font-size:1.05rem;color:var(--ac)}.c p{margin:0;color:var(--mu);font-size:.95rem}
+section{padding:10px 0}
+footer{border-top:1px solid var(--bd);padding:20px 0;color:var(--mu);font:.85rem system-ui,sans-serif;text-align:center}
+.sans,input,select,table,label{font-family:system-ui,sans-serif}
+input,select{padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);width:100%;font-size:.95rem}
+label{font-size:.8rem;color:var(--mu);display:block;margin-bottom:3px}
+.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
+.k{font:700 1.7rem system-ui,sans-serif}.k small{display:block;font-size:.78rem;font-weight:400;color:var(--mu)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--bd);white-space:nowrap}th{color:var(--mu);font-weight:600}
+.b{padding:2px 9px;border-radius:99px;font-size:.75rem;font-weight:600}.on{background:#d9efe5;color:#14513c}.off{background:#eee;color:#666}.late{color:var(--bad);font-weight:600}
+.pg{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px;font:.85rem system-ui,sans-serif}
+.hide{display:none}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px}
+</style></head><body>
+<div class="w">
+<nav><b>📚 Nirmal Library</b><div><a onclick="go('home')">Home</a><a onclick="go('home');location.hash='about'">About</a><a onclick="go('home');location.hash='contact'">Contact</a><a onclick="go('admin')">Admin</a></div></nav>
+
+<div id="home">
+<div class="hero"><h1>A quiet place to study,<br>in the heart of Bidhuna.</h1>
+<p>Nirmal Library offers a calm, disciplined reading space for school students, college learners and competitive exam aspirants.</p>
+<p><a class="btn" href="https://maps.app.goo.gl/pzkGyQYtejjHRstt9" target="_blank" rel="noopener">Get Directions</a> <a class="btn o" onclick="go('admin')">Admin Login</a></p></div>
+<section id="about"><h2>Why students choose us</h2>
+<div class="g">
+<div class="c"><h3>Silent Study Zone</h3><p>Distraction-free environment for long, focused sessions.</p></div>
+<div class="c"><h3>Personal Seats</h3><p>Reserved desks with proper lighting and comfortable seating.</p></div>
+<div class="c"><h3>Flexible Timings</h3><p>Morning to evening slots to fit your school or coaching routine.</p></div>
+<div class="c"><h3>Affordable Monthly Fee</h3><p>Simple monthly plans, transparent receipts.</p></div></div></section>
+<section id="contact"><h2>Visit us</h2>
+<div class="c"><p><b>Nirmal Library</b>, Bidhuna, Auraiya district, Uttar Pradesh<br>Coordinates: 26.8034, 79.5073</p><br>
+<a class="btn" href="https://maps.app.goo.gl/pzkGyQYtejjHRstt9" target="_blank" rel="noopener">Open in Google Maps</a>
+<p class="sans" style="margin-top:12px;font-size:.85rem">Call and timing details can be added by the admin in the page file.</p></div></section>
+</div>
+
+<div id="admin" class="hide sans">
+<div id="login" class="c" style="max-width:340px;margin:40px auto"><h3>Admin Login</h3>
+<label>Admin email</label><input id="em" type="email" autocomplete="username"><br><br>
+<label>Password</label><input id="pw" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"><br><br>
+<button class="btn" onclick="login()">Login</button> <button class="btn o s" onclick="forgot()">Password bhul gaye?</button><p id="le" class="late"></p>
+<p style="font-size:.78rem">Admin accounts are created in Firebase Console &gt; Authentication.</p></div>
+
+<div id="panel" class="hide">
+<div class="row"><h2>Admin Dashboard</h2><button class="btn o s" onclick="logout()">Logout</button></div>
+<div class="g" id="stats"></div>
+<div class="c" style="margin-bottom:16px"><h3>Pending fees</h3><div class="tw" id="pend"></div></div>
+<div class="c" style="margin-bottom:16px"><h3>Admit new student</h3>
+<div class="f">
+<div><label>Name</label><input id="n"></div><div><label>Phone</label><input id="p" inputmode="numeric"></div>
+<div><label>Seat no.</label><input id="s"></div><div><label>Monthly fee (₹)</label><input id="fe" type="number" value="500"></div>
+<div><label>Admission date</label><input id="d" type="date"></div>
+<div><label>First month fee</label><select id="pd"><option value="1">Paid now</option><option value="0">Not paid yet</option></select></div>
+<div><button class="btn" onclick="admit()">Admit Student</button></div></div></div>
+<div class="c"><div class="row"><h3>Students</h3><input id="q" placeholder="Search name / phone / seat" style="max-width:240px" oninput="search()"></div>
+<div class="tw" id="list"></div>
+<div class="pg"><button class="btn o s" onclick="pgPrev()">‹ Prev</button><span id="pi"></span><button class="btn o s" onclick="pgNext()">Next ›</button></div></div>
+</div></div>
+
+<footer>© Nirmal Library, Bidhuna</footer></div>
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,sendPasswordResetEmail,signOut}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import{getFirestore,collection,doc,addDoc,updateDoc,deleteDoc,writeBatch,onSnapshot,query,orderBy,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+// Firebase config for project nirmal-library-4ca55
+const firebaseConfig={apiKey:"AIzaSyAIOLojqyNRl0YC9pQDWG6ohQdxU5TshMs",authDomain:"nirmal-library-4ca55.firebaseapp.com",projectId:"nirmal-library-4ca55",storageBucket:"nirmal-library-4ca55.firebasestorage.app",messagingSenderId:"527391687606",appId:"1:527391687606:web:e600cdf422f6974d4ef717"};
+const PER=10,CONFIGURED=true;
+let D={students:[],pay:[]},pgn=0,authed=false,auth,db,unsubs=[];
+if(CONFIGURED){const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app)}
+const $=i=>document.getElementById(i),inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const iso=d=>d.toISOString().slice(0,10),today=()=>iso(new Date());
+const addM=(s,m)=>{const d=new Date(s+'T00:00:00');d.setMonth(d.getMonth()+m);return iso(d)};
+const diff=(a,b)=>Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/864e5);
+function go(v){$('home').classList.toggle('hide',v!=='home');$('admin').classList.toggle('hide',v!=='admin');if(v==='admin')render()}
+async function login(){if(!CONFIGURED){$('le').textContent='Add your Firebase config in the code first.';return}
+ try{await signInWithEmailAndPassword(auth,$('em').value.trim(),$('pw').value);$('le').textContent=''}catch(e){$('le').textContent='Login failed ('+e.code+')'}}
+async function forgot(){if(!CONFIGURED){$('le').textContent='Add your Firebase config in the code first.';return}
+ const e=$('em').value.trim();if(!e){$('le').textContent='Pehle upar admin email likhiye, phir dobara dabaiye.';return}
+ try{await sendPasswordResetEmail(auth,e)}catch(x){}
+ $('le').textContent='Agar yeh email admin account ka hai, to password reset link bhej diya gaya hai. Inbox/Spam check kijiye.'}
+function logout(){signOut(auth)}
+if(CONFIGURED)onAuthStateChanged(auth,u=>{unsubs.forEach(f=>f());unsubs=[];authed=!!u;
+ if(u){unsubs.push(onSnapshot(query(collection(db,'students'),orderBy('createdAt','desc')),s=>{D.students=s.docs.map(d=>({id:d.id,...d.data()}));render()},e=>alert('Students: '+e.code)));
+  unsubs.push(onSnapshot(collection(db,'payments'),s=>{D.pay=s.docs.map(d=>d.data());render()},e=>alert('Payments: '+e.code)))}
+ else{D={students:[],pay:[]}}render()});
+function overdue(s){if(!s.active)return 0;return Math.max(0,diff(today(),s.due))}
+function pending(s){const o=overdue(s);return o>0?s.fee*Math.ceil(o/30):0}
+async function admit(){const name=$('n').value.trim();if(!name)return alert('Enter student name');
+ const fee=+$('fe').value||0,date=$('d').value||today(),paid=$('pd').value==='1';
+ try{const b=writeBatch(db),r=doc(collection(db,'students'));
+  b.set(r,{name,phone:$('p').value.trim(),seat:$('s').value.trim(),fee,joined:date,active:true,due:paid?addM(date,1):date,createdAt:serverTimestamp()});
+  if(paid&&fee)b.set(doc(collection(db,'payments')),{studentId:r.id,studentName:name,amt:fee,date,createdAt:serverTimestamp()});
+  await b.commit();['n','p','s'].forEach(i=>$(i).value='');pgn=0}catch(e){alert('Could not save: '+e.code)}}
+async function toggle(id){const s=D.students.find(x=>x.id===id);try{await updateDoc(doc(db,'students',id),{active:!s.active})}catch(e){alert(e.code)}}
+async function collect(id){const s=D.students.find(x=>x.id===id);if(!confirm('Collect '+inr(s.fee)+' from '+s.name+'?'))return;
+ try{const b=writeBatch(db);b.set(doc(collection(db,'payments')),{studentId:id,studentName:s.name,amt:s.fee,date:today(),createdAt:serverTimestamp()});
+  b.update(doc(db,'students',id),{due:addM(s.due,1)});await b.commit()}catch(e){alert(e.code)}}
+async function del(id){if(!confirm('Remove this student? Past payment records are kept.'))return;try{await deleteDoc(doc(db,'students',id))}catch(e){alert(e.code)}}
+Object.assign(window,{go,login,forgot,logout,admit,toggle,collect,del,render,draw:()=>draw()});
+function render(){const a=authed;$('login').classList.toggle('hide',a);$('panel').classList.toggle('hide',!a);if(!a)return;
+ const col=D.pay.reduce((t,p)=>t+p.amt,0),m=today().slice(0,7),cm=D.pay.filter(p=>p.date.startsWith(m)).reduce((t,p)=>t+p.amt,0);
+ const late=D.students.filter(s=>pending(s)>0),pen=late.reduce((t,s)=>t+pending(s),0),act=D.students.filter(s=>s.active).length;
+ $('stats').innerHTML=[[inr(col),'Total fee collected'],[inr(cm),'Collected this month'],[`<span class="${pen?'late':''}">${inr(pen)}</span>`,'Fee pending'],[late.length,'Students with dues'],[act+' / '+D.students.length,'Active / total']].map(x=>`<div class="c"><div class="k">${x[0]}<small>${x[1]}</small></div></div>`).join('');
+ late.sort((a,b)=>overdue(b)-overdue(a));
+ $('pend').innerHTML=late.length?`<table><tr><th>Student</th><th>Seat</th><th>Pending</th><th>Since</th><th>Days</th><th></th></tr>${late.slice(0,10).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.seat)}</td><td class="late">${inr(pending(s))}</td><td>${s.due}</td><td class="late">${overdue(s)} days</td><td><button class="btn s" onclick="collect('${s.id}')">Collect</button></td></tr>`).join('')}</table>${late.length>10?`<p style="font-size:.8rem">Showing top 10 of ${late.length}</p>`:''}`:'<p style="color:var(--mu)">No pending fees 🎉</p>';
+ draw()}
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function draw(){if(!authed)return;const q=$('q').value.toLowerCase();
+ const L=D.students.filter(s=>!q||(s.name+s.phone+s.seat).toLowerCase().includes(q));
+ const pages=Math.max(1,Math.ceil(L.length/PER));pgn=Math.min(Math.max(0,pgn),pages-1);
+ const r=L.slice(pgn*PER,pgn*PER+PER);
+ $('list').innerHTML=r.length?`<table><tr><th>Name</th><th>Phone</th><th>Seat</th><th>Fee</th><th>Next due</th><th>Status</th><th>Actions</th></tr>${r.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.phone)}</td><td>${esc(s.seat)}</td><td>${inr(s.fee)}</td><td class="${overdue(s)?'late':''}">${s.due}${overdue(s)?' ('+overdue(s)+'d late)':''}</td><td><span class="b ${s.active?'on':'off'}">${s.active?'Active':'Inactive'}</span></td><td><button class="btn o s" onclick="toggle('${s.id}')">${s.active?'Mark inactive':'Mark active'}</button> <button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn r s" onclick="del('${s.id}')">✕</button></td></tr>`).join('')}</table>`:'<p style="color:var(--mu)">No students yet. Admit your first student above.</p>';
+ $('pi').textContent=`Page ${pgn+1} of ${pages} · ${L.length} students`}
+$('d').value=today();
+window.pgPrev=()=>{pgn--;draw()};window.pgNext=()=>{pgn++;draw()};window.search=()=>{pgn=0;draw()};
+</script></body></html>
