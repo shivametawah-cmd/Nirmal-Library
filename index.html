@@ -63,7 +63,8 @@ th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--bd);white-sp
 <div class="c" style="margin-bottom:16px"><h3>Pending fees</h3><div class="tw" id="pend"></div></div>
 <div class="c" style="margin-bottom:16px"><h3>Recent fee payments</h3><div class="tw" id="rec"></div></div>
 <div class="c" style="margin-bottom:16px"><h3>Admit new student</h3><div class="f" id="af"></div><br><button class="btn" onclick="admit()">Admit Student</button> <span id="am"></span></div>
-<div class="c" style="margin-bottom:16px"><h3>Excel se bulk upload</h3><div class="row" style="justify-content:flex-start"><button class="btn o s" onclick="tpl()">⬇ Excel format download</button><input type="file" id="xf" accept=".xlsx,.xls,.csv" style="max-width:260px"><button class="btn s" onclick="importXlsx()">Upload students</button></div><p id="im" style="font-size:.8rem;color:var(--mu)">Photo aur Aadhaar ke Drive links jaise hain waise save honge aur Details me khulenge.</p></div>
+<div class="c" style="margin-bottom:16px"><h3>Excel se bulk upload</h3><div class="row" style="justify-content:flex-start"><button class="btn o s" onclick="tpl()">⬇ Excel format download</button><input type="file" id="xf" accept=".xlsx,.xls,.csv" style="max-width:260px"><button class="btn s" onclick="importXlsx()">Upload students</button></div><div class="row" style="justify-content:flex-start;margin-top:8px"><label style="margin:0">Billing shuru (mahina)</label><input type="month" id="bm" value="2026-08" style="max-width:160px"><button class="btn o s" onclick="resetBilling()">Purane students ki due is mahine se karein</button></div>
+<p id="im" style="font-size:.8rem;color:var(--mu)">Photo aur Aadhaar ke Drive links jaise hain waise save honge aur Details me khulenge.</p></div>
 <div class="c"><div class="row"><h3>Students</h3><input id="q" placeholder="Search name / phone / seat" style="max-width:240px" oninput="search()"></div>
 <div class="tw" id="list"></div>
 <div class="pg"><button class="btn o s" onclick="pgPrev()">‹ Prev</button><span id="pi"></span><button class="btn o s" onclick="pgNext()">Next ›</button></div></div>
@@ -114,7 +115,11 @@ function collect(id){const s=D.students.find(x=>x.id===id),pm=pmonths(s);
 async function savePay(id){const s=D.students.find(x=>x.id===id),m=Math.max(1,+$('p_m').value||1),amt=+$('p_amt').value;if(!amt)return alert('Amount likhiye');
  try{const b=writeBatch(db);b.set(doc(collection(db,'payments')),{studentId:id,studentName:s.name,amt,months:m,date:$('p_date').value||today(),mode:$('p_mode').value,createdAt:serverTimestamp()});
   b.update(doc(db,'students',id),{paid:paidOf(s)+m});await b.commit();$('dg').close()}catch(e){alert(e.code||e.message)}}
-Object.assign(window,{payAmt,savePay});
+const billStart=()=>($('bm').value||'2026-08')+'-01';
+async function resetBilling(){const st=billStart(),L=D.students.filter(s=>s.joined&&s.joined<st);if(!L.length)return alert('Koi student nahi mila');
+ if(!confirm(L.length+' students ki due date '+st.slice(0,7)+' se shuru hogi (isse pehle ke mahine jama maane jayenge). Aage badhein?'))return;
+ try{for(let i=0;i<L.length;i+=400){const b=writeBatch(db);L.slice(i,i+400).forEach(s=>{let n=0;while(addM(s.joined,n)<st&&n<600)n++;b.update(doc(db,'students',s.id),{paid:n})});await b.commit()}alert('Ho gaya: '+L.length+' students update hue')}catch(e){alert(e.code||e.message)}}
+Object.assign(window,{payAmt,savePay,resetBilling});
 
 const FF=[['name','Name *'],['gender','Gender','sel',['Male','Female','Other']],['father','Father name'],['mother','Mother name'],['phone','Mobile no *','tel'],['phone2','Contact number','tel'],['dob','Date of birth','date'],['email','Email id','email'],['address','Address'],['aadhar4','Aadhaar last 4 digits'],['joined','Admission date','date'],['shift','Shift','list',['8:00 AM - 2:00 PM','2:00 PM - 8:00 PM','8:00 AM - 8:00 PM']],['prep','Preparing for','list',['UP Police','SSC','Railway','Others']],['seat','Seat no.'],['fee','Monthly fee (₹)','number'],['pd','First month fee','pd']];
 function buildForm(){$('af').innerHTML=FF.map(([k,l,t,o])=>{const id='f_'+k;let i;
@@ -146,9 +151,9 @@ async function importXlsx(){const file=$('xf').files[0];if(!file)return alert('P
   for(const row of rows){const o={};for(const h in row){const n=h.toLowerCase().replace(/[^a-z0-9]/g,''),m=MAP.find(x=>x[1].test(n));if(m&&!(m[0] in o))o[m[0]]=row[h]}
    const phone=String(o.phone||'').replace(/\D/g,'').slice(-10),name=String(o.name||'').trim();if(!name||!phone||seen.has(phone)){skip++;continue}seen.add(phone);
    const t=x=>String(o[x]||'').trim(),joined=pdte(o.joined)||today();
-   list.push({name,gender:t('gender'),father:t('father'),mother:t('mother'),phone,phone2:t('phone2').replace(/\D/g,'').slice(-10),dob:pdte(o.dob),email:t('email'),address:t('address'),aadhar4:t('aadhar4').replace(/\D/g,'').slice(-4),aadharUrl:t('aadharUrl'),photoUrl:t('photoUrl'),shift:t('shift'),prep:t('prep'),seat:t('seat'),fee:+o.fee||+val('fee')||500,joined,active:!/^(not|in)/i.test(t('status')),paid:(()=>{const d=pdte(o.due)||today();let n=0;while(addM(joined,n)<d&&n<600)n++;return n})(),createdAt:serverTimestamp()})}
+   list.push({name,gender:t('gender'),father:t('father'),mother:t('mother'),phone,phone2:t('phone2').replace(/\D/g,'').slice(-10),dob:pdte(o.dob),email:t('email'),address:t('address'),aadhar4:t('aadhar4').replace(/\D/g,'').slice(-4),aadharUrl:t('aadharUrl'),photoUrl:t('photoUrl'),shift:t('shift'),prep:t('prep'),seat:t('seat'),fee:+o.fee||+val('fee')||500,joined,active:!/^(not|in)/i.test(t('status')),paid:(()=>{const d=pdte(o.due)||billStart();let n=0;while(addM(joined,n)<d&&n<600)n++;return n})(),createdAt:serverTimestamp()})}
   if(!list.length)return alert('Koi naya student nahi mila ('+skip+' skip: naam/mobile khali ya duplicate)');
-  if(!confirm(list.length+' naye students add honge, '+skip+' skip honge. Aage badhein?\n(Pending fee shuru hone ki date aaj se maani jayegi, jab tak Excel me "Next Due Date" na ho.)'))return;
+  if(!confirm(list.length+' naye students add honge, '+skip+' skip honge. Aage badhein?\n(Fee ginti "Billing shuru" mahine se hogi, jab tak Excel me "Next Due Date" na ho.)'))return;
   for(let i=0;i<list.length;i+=400){const b=writeBatch(db);list.slice(i,i+400).forEach(s=>b.set(doc(collection(db,'students')),s));await b.commit()}
   $('im').textContent='✓ '+list.length+' students upload ho gaye, '+skip+' skip.';$('xf').value=''}catch(e){alert('Upload fail: '+(e.code||e.message))}}
 async function info(id){const s=D.students.find(x=>x.id===id),L=[['Father',s.father],['Mother',s.mother],['Gender',s.gender],['DOB',s.dob],['Mobile',s.phone],['Contact',s.phone2],['Email',s.email],['Address',s.address],['Aadhaar (last 4)',s.aadhar4],['Shift',s.shift],['Preparing for',s.prep],['Seat',s.seat],['Admission',s.joined],['Monthly fee',inr(s.fee)]];
