@@ -146,7 +146,7 @@ async function savePayEdit(pid){const o=D.pay.find(x=>x.id===pid),s=D.students.f
 async function delPay(pid){const o=D.pay.find(x=>x.id===pid),s=D.students.find(x=>x.id===o.studentId);if(!confirm(inr(o.amt)+' ki ye payment delete karein? Student ki fee wapas pending ho jayegi.'))return;
  try{const b=writeBatch(db);if(s){const r=revPay(s,o.amt);b.update(doc(db,'students',s.id),{paid:r.p,credit:r.t})}b.delete(doc(db,'payments',pid));await b.commit();s?info(s.id):$('dg').close()}catch(e){alert(e.code||e.message)}}
 Object.assign(window,{editPay,savePayEdit,delPay});
-let mpg=0;
+let mpg=0,ppg=0;
 function pickMonth(k){$('mm').value=k;mpg=0;monthly()}
 function monthly(){if(!$('mm').value)$('mm').value=today().slice(0,7);const by={};
  D.pay.forEach(p=>{const k=(p.date||'').slice(0,7);if(k)(by[k]=by[k]||[]).push(p)});
@@ -157,7 +157,7 @@ function monthly(){if(!$('mm').value)$('mm').value=today().slice(0,7);const by={
  const r=L.slice(mpg*PER,mpg*PER+PER);
  $('mdet').innerHTML=`<h4 style="margin:0 0 6px">${ml(sel)}: ${L.length} students, kul ${inr(sum(by[sel]||[]))}</h4>`+(r.length?`<div class="tw"><table><tr><th>Student</th><th>Seat</th><th>Jama ki date</th><th>Amount</th><th>Mode</th><th></th></tr>${r.map(x=>{const s=D.students.find(y=>y.id===x.id);return`<tr><td>${esc(s?s.name:x.name)}</td><td>${esc(s?s.seat||'':'')}</td><td>${x.d.sort().join(', ')}</td><td>${inr(x.amt)}</td><td>${esc([...x.m].filter(Boolean).join(', '))}</td><td>${s?`<button class="btn o s" onclick="info('${s.id}')">Details</button>`:''}</td></tr>`}).join('')}</table></div>`:'<p style="color:var(--mu)">Is mahine koi fee jama nahi hui.</p>');
  $('mpi').textContent=`Page ${mpg+1} of ${pages}`}
-Object.assign(window,{pickMonth,monthly,mSel:()=>{mpg=0;monthly()},mPrev:()=>{mpg--;monthly()},mNext:()=>{mpg++;monthly()}});
+Object.assign(window,{pPrev:()=>{ppg--;render()},pNext:()=>{ppg++;render()},pickMonth,monthly,mSel:()=>{mpg=0;monthly()},mPrev:()=>{mpg--;monthly()},mNext:()=>{mpg++;monthly()}});
 function exportXlsx(){const rows=D.students.map(s=>[s.name,s.gender||'',s.father||'',s.mother||'',s.phone||'',s.dob||'',s.aadharUrl||'',s.photoUrl||'',s.email||'',s.phone2||'',s.address||'',s.aadhar4||'',s.joined||'',s.shift||'',s.prep||'',s.active?'Active':'Not active',s.fee,s.seat||'','','']);
  if(!rows.length)return alert('Abhi koi student nahi hai');const ws=XLSX.utils.aoa_to_sheet([COLS(),...rows]),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Students');XLSX.writeFile(wb,'nirmal-library-students.xlsx')}
 function impPlan(st,fd,bs){const mk=[bs.slice(0,7),addM(bs,1).slice(0,7)];let p=0;while(addM(st.joined,p)<bs&&p<600)p++;let ex=0;const pays=[];
@@ -246,7 +246,8 @@ function render(){const a=authed;$('login').classList.toggle('hide',a);$('panel'
  const late=D.students.filter(s=>pending(s)>0),pen=late.reduce((t,s)=>t+pending(s),0),act=D.students.filter(s=>s.active).length;
  $('stats').innerHTML=[[inr(col),'Total fee collected'],[inr(cm),'Collected this month'],[`<span class="${pen?'late':''}">${inr(pen)}</span>`,'Fee pending'],[late.length,'Students with dues'],[act+' / '+D.students.length,'Active / total']].map(x=>`<div class="c"><div class="k">${x[0]}<small>${x[1]}</small></div></div>`).join('');
  late.sort((a,b)=>overdue(b)-overdue(a));
- $('pend').innerHTML=late.length?`<table><tr><th>Student</th><th>Seat</th><th>Pending</th><th>Due date (sabse purani)</th><th>Kitne din late</th><th></th></tr>${late.slice(0,10).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.seat)}</td><td class="late">${inr(pending(s))} (${pmonths(s)} mahine ki fee${s.credit?', ₹'+s.credit+' de chuke':''})</td><td>${dueOf(s)}</td><td class="late">${overdue(s)} din</td><td><button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn o s" onclick="adjust('${s.id}')">Waive / 15 din</button></td></tr>`).join('')}</table>${late.length>10?`<p style="font-size:.8rem">Showing top 10 of ${late.length}</p>`:''}`:'<p style="color:var(--mu)">No pending fees 🎉</p>';
+ const pp=Math.max(1,Math.ceil(late.length/PER));ppg=Math.min(Math.max(0,ppg),pp-1);
+ $('pend').innerHTML=late.length?`<table><tr><th>Student</th><th>Seat</th><th>Pending</th><th>Due date (sabse purani)</th><th>Kitne din late</th><th></th></tr>${late.slice(ppg*PER,ppg*PER+PER).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.seat)}</td><td class="late">${inr(pending(s))} (${pmonths(s)} mahine ki fee${s.credit?', ₹'+s.credit+' de chuke':''})</td><td>${dueOf(s)}</td><td class="late">${overdue(s)} din</td><td><button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn o s" onclick="adjust('${s.id}')">Waive / 15 din</button></td></tr>`).join('')}</table><div class="pg"><button class="btn o s" onclick="pPrev()">‹ Prev</button><span>Page ${ppg+1} of ${pp} · ${late.length} students, kul ${inr(pen)} baaki</span><button class="btn o s" onclick="pNext()">Next ›</button></div>`:'<p style="color:var(--mu)">No pending fees 🎉</p>';
  rec();monthly();draw()}
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function draw(){if(!authed)return;const q=$('q').value.toLowerCase();
