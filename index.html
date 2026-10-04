@@ -62,8 +62,10 @@ th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--bd);white-sp
 <div class="g" id="stats"></div>
 <div class="c" style="margin-bottom:16px"><h3>Pending fees</h3><div class="tw" id="pend"></div></div>
 <div class="c" style="margin-bottom:16px"><h3>Recent fee payments</h3><div class="tw" id="rec"></div></div>
+<div class="c" style="margin-bottom:16px"><div class="row"><h3>Month-wise fee collection</h3><input type="month" id="mm" style="max-width:170px" onchange="mSel()"></div><div class="tw" id="msum"></div><br><div id="mdet"></div><div class="pg"><button class="btn o s" onclick="mPrev()">‹ Prev</button><span id="mpi"></span><button class="btn o s" onclick="mNext()">Next ›</button></div></div>
 <div class="c" style="margin-bottom:16px"><h3>Admit new student</h3><div class="f" id="af"></div><br><button class="btn" onclick="admit()">Admit Student</button> <span id="am"></span></div>
-<div class="c" style="margin-bottom:16px"><h3>Excel se bulk upload</h3><div class="row" style="justify-content:flex-start"><button class="btn o s" onclick="tpl()">⬇ Excel format download</button><input type="file" id="xf" accept=".xlsx,.xls,.csv" style="max-width:260px"><button class="btn s" onclick="importXlsx()">Upload students</button></div><div class="row" style="justify-content:flex-start;margin-top:8px"><label style="margin:0">Billing shuru (mahina)</label><input type="month" id="bm" value="2026-08" style="max-width:160px"><button class="btn o s" onclick="resetBilling()">Purane students ki due is mahine se karein</button></div>
+<div class="c" style="margin-bottom:16px"><h3>Excel se bulk upload</h3><div class="row" style="justify-content:flex-start"><button class="btn o s" onclick="tpl()">⬇ Excel format download</button><input type="file" id="xf" accept=".xlsx,.xls,.csv" style="max-width:260px"><button class="btn s" onclick="importXlsx()">Upload students</button></div><div class="row" style="justify-content:flex-start;margin-top:8px"><button class="btn o s" onclick="exportXlsx()">⬇ Maujooda students ki Excel download</button><label style="margin:0;display:flex;gap:6px;align-items:center"><input type="checkbox" id="xu" style="width:auto">Maujooda students (same mobile) ki details update karein</label></div>
+<div class="row" style="justify-content:flex-start;margin-top:8px"><label style="margin:0">Billing shuru (mahina)</label><input type="month" id="bm" value="2026-08" style="max-width:160px"><button class="btn o s" onclick="resetBilling()">Purane students ki due is mahine se karein</button></div>
 <p id="im" style="font-size:.8rem;color:var(--mu)">Format me 2 mahine ki "Fee Date" columns hain: jis mahine ki date bhari hai wo fee jama maani jayegi, jis mahine ki khali hai wahi next due rahega. Photo/Aadhaar ke Drive links Details me khulenge.</p></div>
 <div class="c"><div class="row"><h3>Students</h3><input id="q" placeholder="Search name / phone / seat" style="max-width:240px" oninput="search()"></div>
 <div class="tw" id="list"></div>
@@ -144,6 +146,20 @@ async function savePayEdit(pid){const o=D.pay.find(x=>x.id===pid),s=D.students.f
 async function delPay(pid){const o=D.pay.find(x=>x.id===pid),s=D.students.find(x=>x.id===o.studentId);if(!confirm(inr(o.amt)+' ki ye payment delete karein? Student ki fee wapas pending ho jayegi.'))return;
  try{const b=writeBatch(db);if(s){const r=revPay(s,o.amt);b.update(doc(db,'students',s.id),{paid:r.p,credit:r.t})}b.delete(doc(db,'payments',pid));await b.commit();s?info(s.id):$('dg').close()}catch(e){alert(e.code||e.message)}}
 Object.assign(window,{editPay,savePayEdit,delPay});
+let mpg=0;
+function pickMonth(k){$('mm').value=k;mpg=0;monthly()}
+function monthly(){if(!$('mm').value)$('mm').value=today().slice(0,7);const by={};
+ D.pay.forEach(p=>{const k=(p.date||'').slice(0,7);if(k)(by[k]=by[k]||[]).push(p)});
+ const ks=Object.keys(by).sort().reverse(),sum=a=>a.reduce((t,p)=>t+p.amt,0),sel=$('mm').value;
+ $('msum').innerHTML=ks.length?`<table><tr><th>Mahina</th><th>Students ne diya</th><th>Kul jama</th></tr>${ks.map(k=>`<tr style="cursor:pointer;${k===sel?'font-weight:700':''}" onclick="pickMonth('${k}')"><td>${ml(k)}</td><td>${new Set(by[k].map(p=>p.studentId||p.studentName)).size}</td><td>${inr(sum(by[k]))}</td></tr>`).join('')}</table><p style="font-size:.78rem;color:var(--mu)">Kisi mahine par dabaiye, neeche uske students ki list khulegi.</p>`:'<p style="color:var(--mu)">Abhi koi payment nahi.</p>';
+ const g={};(by[sel]||[]).forEach(p=>{const id=p.studentId||p.studentName||'?',x=g[id]=g[id]||{id:p.studentId,name:p.studentName||'',amt:0,d:[],m:new Set()};x.amt+=p.amt;x.d.push(p.date);x.m.add(p.mode||'')});
+ const L=Object.values(g).sort((a,b)=>a.name.localeCompare(b.name)),pages=Math.max(1,Math.ceil(L.length/PER));mpg=Math.min(Math.max(0,mpg),pages-1);
+ const r=L.slice(mpg*PER,mpg*PER+PER);
+ $('mdet').innerHTML=`<h4 style="margin:0 0 6px">${ml(sel)}: ${L.length} students, kul ${inr(sum(by[sel]||[]))}</h4>`+(r.length?`<div class="tw"><table><tr><th>Student</th><th>Seat</th><th>Jama ki date</th><th>Amount</th><th>Mode</th><th></th></tr>${r.map(x=>{const s=D.students.find(y=>y.id===x.id);return`<tr><td>${esc(s?s.name:x.name)}</td><td>${esc(s?s.seat||'':'')}</td><td>${x.d.sort().join(', ')}</td><td>${inr(x.amt)}</td><td>${esc([...x.m].filter(Boolean).join(', '))}</td><td>${s?`<button class="btn o s" onclick="info('${s.id}')">Details</button>`:''}</td></tr>`}).join('')}</table></div>`:'<p style="color:var(--mu)">Is mahine koi fee jama nahi hui.</p>');
+ $('mpi').textContent=`Page ${mpg+1} of ${pages}`}
+Object.assign(window,{pickMonth,monthly,mSel:()=>{mpg=0;monthly()},mPrev:()=>{mpg--;monthly()},mNext:()=>{mpg++;monthly()}});
+function exportXlsx(){const rows=D.students.map(s=>[s.name,s.gender||'',s.father||'',s.mother||'',s.phone||'',s.dob||'',s.aadharUrl||'',s.photoUrl||'',s.email||'',s.phone2||'',s.address||'',s.aadhar4||'',s.joined||'',s.shift||'',s.prep||'',s.active?'Active':'Not active',s.fee,s.seat||'','','']);
+ if(!rows.length)return alert('Abhi koi student nahi hai');const ws=XLSX.utils.aoa_to_sheet([COLS(),...rows]),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Students');XLSX.writeFile(wb,'nirmal-library-students.xlsx')}
 function impPlan(st,fd,bs){const mk=[bs.slice(0,7),addM(bs,1).slice(0,7)];let p=0;while(addM(st.joined,p)<bs&&p<600)p++;let ex=0;const pays=[];
  mk.forEach((k,i)=>{let c=-1;for(let n=0;n<600;n++){const d=addM(st.joined,n).slice(0,7);if(d===k){c=n;break}if(d>k)break}const dt=pdte(fd[i]);if(c<0||!dt)return;pays.push(dt);if(c===p)p++;else ex++});return{paid:p,extra:ex,pays}}
 const billStart=()=>($('bm').value||'2026-08')+'-01';
@@ -179,23 +195,30 @@ function pdte(v){if(!v&&v!==0)return'';const f=d=>d.getFullYear()+'-'+String(d.g
  const m=String(v).trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);if(m){let y=+m[3];if(y<100)y+=2000;return y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')}return/^\d{4}-\d{2}-\d{2}/.test(v)?String(v).slice(0,10):''}
 async function importXlsx(){const file=$('xf').files[0];if(!file)return alert('Pehle Excel file chuniye');
  try{const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true}),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:true});
-  const seen=new Set(D.students.map(s=>s.phone)),list=[];let skip=0;
+  const nrm=x=>String(x||'').replace(/\D/g,'').slice(-10),ex=new Map(D.students.map(s=>[nrm(s.phone),s])),done=new Set(),upd=$('xu').checked,list=[],ups=[];let skip=0;
   for(const row of rows){const o={},fd=[];for(const h in row){const n=h.toLowerCase().replace(/[^a-z0-9]/g,'');if(/^feedate[12]/.test(n)){fd[+n[7]-1]=row[h];continue}const m=MAP.find(x=>x[1].test(n));if(m&&!(m[0] in o))o[m[0]]=row[h]}
-   const phone=String(o.phone||'').replace(/\D/g,'').slice(-10),name=String(o.name||'').trim();if(!name||!phone||seen.has(phone)){skip++;continue}seen.add(phone);
-   const t=x=>String(o[x]||'').trim(),joined=pdte(o.joined)||today();
+   const phone=String(o.phone||'').replace(/\D/g,'').slice(-10),name=String(o.name||'').trim();if(!phone||done.has(phone)){skip++;continue}done.add(phone);
+   const t=x=>String(o[x]||'').trim(),old=ex.get(phone);
+   if(old){if(!upd){skip++;continue}const u={},sv=(k,v)=>{if(v!==''&&v!=null)u[k]=v},st=t('status');
+    sv('name',t('name'));sv('gender',t('gender'));sv('father',t('father'));sv('mother',t('mother'));sv('phone2',t('phone2').replace(/\D/g,'').slice(-10));sv('dob',pdte(o.dob));sv('email',t('email'));sv('address',t('address'));sv('aadhar4',t('aadhar4').replace(/\D/g,'').slice(-4));sv('aadharUrl',t('aadharUrl'));sv('photoUrl',t('photoUrl'));sv('shift',t('shift'));sv('prep',t('prep'));sv('seat',t('seat'));if(+o.fee>0)u.fee=+o.fee;sv('joined',pdte(o.joined));if(st)u.active=!/^(not|in)/i.test(st);
+    const dd=pdte(o.due);if(dd){const jn=u.joined||old.joined;let n=0;while(addM(jn,n)<dd&&n<600)n++;u.paid=n;u.extra=0}
+    if(Object.keys(u).length)ups.push([old.id,u]);else skip++;continue}
+   if(!name){skip++;continue}
+   const joined=pdte(o.joined)||today();
    list.push({_fd:fd,_hd:!!pdte(o.due),name,gender:t('gender'),father:t('father'),mother:t('mother'),phone,phone2:t('phone2').replace(/\D/g,'').slice(-10),dob:pdte(o.dob),email:t('email'),address:t('address'),aadhar4:t('aadhar4').replace(/\D/g,'').slice(-4),aadharUrl:t('aadharUrl'),photoUrl:t('photoUrl'),shift:t('shift'),prep:t('prep'),seat:t('seat'),fee:+o.fee||+val('fee')||500,joined,active:!/^(not|in)/i.test(t('status')),paid:(()=>{const d=pdte(o.due)||billStart();let n=0;while(addM(joined,n)<d&&n<600)n++;return n})(),createdAt:serverTimestamp()})}
-  if(!list.length)return alert('Koi naya student nahi mila ('+skip+' skip: naam/mobile khali ya duplicate)');
-  if(!confirm(list.length+' naye students add honge, '+skip+' skip honge. Aage badhein?\n(Fee ginti "Billing shuru" mahine se hogi, jab tak Excel me "Next Due Date" na ho.)'))return;
+  if(!list.length&&!ups.length)return alert('Koi naya ya update hone wala student nahi mila ('+skip+' skip). Maujooda students ki details badalni hon to "Maujooda students update karein" tick kijiye.');
+  if(!confirm(list.length+' naye students add honge, '+ups.length+' maujooda students update honge, '+skip+' skip honge. Aage badhein?\n(Fee ginti "Billing shuru" mahine se hogi, jab tak Excel me "Next Due Date" na ho.)'))return;
   const bs=billStart();let np=0;
   for(let i=0;i<list.length;i+=120){const b=writeBatch(db);list.slice(i,i+120).forEach(({_fd,_hd,...st})=>{const ref=doc(collection(db,'students')),pl=impPlan(st,_fd,bs);
    if(!_hd){st.paid=pl.paid;st.extra=pl.extra}else st.extra=0;b.set(ref,st);
    pl.pays.forEach(dt=>{np++;b.set(doc(collection(db,'payments')),{studentId:ref.id,studentName:st.name,amt:st.fee,months:1,mode:'Import',date:dt,createdAt:serverTimestamp()})})});await b.commit()}
-  $('im').textContent='✓ '+list.length+' students upload ho gaye, '+np+' fee payments record hui, '+skip+' skip.';$('xf').value=''}catch(e){alert('Upload fail: '+(e.code||e.message))}}
+  for(let i=0;i<ups.length;i+=400){const b=writeBatch(db);ups.slice(i,i+400).forEach(([id,u])=>b.update(doc(db,'students',id),u));await b.commit()}
+  $('im').textContent='✓ '+list.length+' naye students add hue, '+ups.length+' students update hue, '+np+' fee payments record hui, '+skip+' skip.';$('xf').value=''}catch(e){alert('Upload fail: '+(e.code||e.message))}}
 async function info(id){const s=D.students.find(x=>x.id===id),L=[['Father',s.father],['Mother',s.mother],['Gender',s.gender],['DOB',s.dob],['Mobile',s.phone],['Contact',s.phone2],['Email',s.email],['Address',s.address],['Aadhaar (last 4)',s.aadhar4],['Shift',s.shift],['Preparing for',s.prep],['Seat',s.seat],['Admission',s.joined],['Monthly fee',inr(s.fee)],['Partial/advance jama',s.credit?inr(s.credit):'']];
  $('dgc').innerHTML=`<h3>${esc(s.name)}</h3><p>Loading...</p>`;openDg();let f={};try{const d=await getDoc(doc(db,'studentFiles',id));if(d.exists())f=d.data()}catch(e){}
  const lk=(u,t)=>u?`<a href="${esc(u)}" target="_blank" rel="noopener">${t} (Drive)</a>`:'';
  $('dgc').innerHTML=`<h3>${esc(s.name)}</h3>${f.photo?`<img src="${f.photo}" style="max-width:140px;border-radius:8px"><br>`:''}${L.map(x=>x[1]?`<div><span style="color:var(--mu)">${x[0]}:</span> ${esc(x[1])}</div>`:'').join('')}<p>${lk(s.photoUrl,'Photo')} ${lk(s.aadharUrl,'Aadhaar card')}</p>${f.aadhar?`<p>Aadhaar image:<br><img src="${f.aadhar}" style="max-width:100%;border-radius:8px"></p>`:''}${adjl(s)}${hist(id)}<p><button class="btn s" onclick="collect('${id}')">₹ Fee jama karein</button> <button class="btn o s" onclick="adjust('${id}')">Waive off / din ke hisaab se fee</button> <button class="btn o s" onclick="edit('${id}')">✎ Edit / photo-Aadhaar upload</button></p>`}
-Object.assign(window,{importXlsx,tpl,info,admit});
+Object.assign(window,{importXlsx,tpl,info,admit,exportXlsx});
 function fh(pre,[k,l,t,o]){const id=pre+k;let i;
  if(t==='sel')i=`<select id="${id}">${o.map(x=>`<option>${x}</option>`).join('')}</select>`;
  else if(t==='list')i=`<input id="${id}" list="${id}l"><datalist id="${id}l">${o.map(x=>`<option value="${x}">`).join('')}</datalist>`;
@@ -224,7 +247,7 @@ function render(){const a=authed;$('login').classList.toggle('hide',a);$('panel'
  $('stats').innerHTML=[[inr(col),'Total fee collected'],[inr(cm),'Collected this month'],[`<span class="${pen?'late':''}">${inr(pen)}</span>`,'Fee pending'],[late.length,'Students with dues'],[act+' / '+D.students.length,'Active / total']].map(x=>`<div class="c"><div class="k">${x[0]}<small>${x[1]}</small></div></div>`).join('');
  late.sort((a,b)=>overdue(b)-overdue(a));
  $('pend').innerHTML=late.length?`<table><tr><th>Student</th><th>Seat</th><th>Pending</th><th>Due date (sabse purani)</th><th>Kitne din late</th><th></th></tr>${late.slice(0,10).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.seat)}</td><td class="late">${inr(pending(s))} (${pmonths(s)} mahine ki fee${s.credit?', ₹'+s.credit+' de chuke':''})</td><td>${dueOf(s)}</td><td class="late">${overdue(s)} din</td><td><button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn o s" onclick="adjust('${s.id}')">Waive / 15 din</button></td></tr>`).join('')}</table>${late.length>10?`<p style="font-size:.8rem">Showing top 10 of ${late.length}</p>`:''}`:'<p style="color:var(--mu)">No pending fees 🎉</p>';
- rec();draw()}
+ rec();monthly();draw()}
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function draw(){if(!authed)return;const q=$('q').value.toLowerCase();
  const L=D.students.filter(s=>!q||(s.name+s.phone+s.seat).toLowerCase().includes(q));
