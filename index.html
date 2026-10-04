@@ -96,7 +96,7 @@ async function forgot(){if(!CONFIGURED){$('le').textContent='Add your Firebase c
 function logout(){signOut(auth)}
 if(CONFIGURED)onAuthStateChanged(auth,u=>{unsubs.forEach(f=>f());unsubs=[];authed=!!u;
  if(u){unsubs.push(onSnapshot(query(collection(db,'students'),orderBy('createdAt','desc')),s=>{D.students=s.docs.map(d=>({id:d.id,...d.data()}));render()},e=>alert('Students: '+e.code)));
-  unsubs.push(onSnapshot(collection(db,'payments'),s=>{D.pay=s.docs.map(d=>d.data());render()},e=>alert('Payments: '+e.code)))}
+  unsubs.push(onSnapshot(collection(db,'payments'),s=>{D.pay=s.docs.map(d=>({id:d.id,...d.data()}));render()},e=>alert('Payments: '+e.code)))}
  else{D={students:[],pay:[]}}render()});
 const cyc=s=>{let n=0;while(addM(s.joined||today(),n)<today()&&n<600)n++;return n};
 const cc=(s,c)=>s.adj&&s.adj[c]!=null?s.adj[c]:s.fee;
@@ -108,9 +108,9 @@ function overdue(s){return pmonths(s)>0?diff(today(),dueOf(s)):0}
 function pending(s){return Math.max(0,pcyc(s).reduce((t,c)=>t+cc(s,c),0)-(s.credit||0))}
 const openDg=()=>{const d=$('dg');if(!d.open)d.showModal()};
 function rec(){const r=[...D.pay].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
- $('rec').innerHTML=r.length?`<table><tr><th>Date</th><th>Student</th><th>Amount</th><th>Mode</th></tr>${r.map(p=>`<tr><td>${p.date}</td><td>${esc(p.studentName||'')}</td><td>${inr(p.amt)}${pl(p)}</td><td>${esc(p.mode||'')}</td></tr>`).join('')}</table>`:'<p style="color:var(--mu)">Abhi koi payment nahi.</p>'}
+ $('rec').innerHTML=r.length?`<table><tr><th>Date</th><th>Student</th><th>Amount</th><th>Mode</th><th></th></tr>${r.map(p=>`<tr><td>${p.date}</td><td>${esc(p.studentName||'')}</td><td>${inr(p.amt)}${pl(p)}</td><td>${esc(p.mode||'')}</td><td><button class="btn o s" onclick="editPay('${p.id}')">Edit</button></td></tr>`).join('')}</table>`:'<p style="color:var(--mu)">Abhi koi payment nahi.</p>'}
 function hist(id){const r=D.pay.filter(p=>p.studentId===id).sort((a,b)=>b.date.localeCompare(a.date));
- return`<h4 style="margin:10px 0 4px">Fee history</h4>`+(r.length?r.map(p=>`<div>${p.date} — ${inr(p.amt)}${pl(p)} ${esc(p.mode||'')}</div>`).join(''):'<div style="color:var(--mu)">Abhi koi fee jama nahi.</div>')}
+ return`<h4 style="margin:10px 0 4px">Fee history</h4>`+(r.length?r.map(p=>`<div>${p.date} — ${inr(p.amt)}${pl(p)} ${esc(p.mode||'')} <button class="btn o s" onclick="editPay('${p.id}')">Edit</button></div>`).join(''):'<div style="color:var(--mu)">Abhi koi fee jama nahi.</div>')}
 const pl=p=>p.months>1?' ('+p.months+' mahine)':(p.months===0?' (partial)':'');
 function payCalc(s,a){let t=Math.round(((s.credit||0)+a)*100)/100,c=paidOf(s),m=0,lim=cyc(s);
  for(let i=0;i<600;i++){const k=cc(s,c);if(k<=0){if(c<lim){c++;m++;continue}break}if(t+1e-9>=k){t=Math.round((t-k)*100)/100;c++;m++}else break}
@@ -134,6 +134,16 @@ async function saveAdj(id){const s=D.students.find(x=>x.id===id),c=+$('a_c').val
  if(m>0){u.paid=paidOf(s2)+m+(s.extra||0);u.extra=0;u.credit=r}
  try{await updateDoc(doc(db,'students',id),u);info(id)}catch(e){alert(e.code||e.message)}}
 function adjl(s){const k=Object.keys(s.adj||{}).sort((a,b)=>a-b);return k.length?`<h4 style="margin:10px 0 4px">Fee adjustments</h4>`+k.map(c=>`<div>${addM(s.joined,+c)} wali fee: ${inr(s.adj[c])} (${esc((s.adjn||{})[c]||'')})</div>`).join(''):''}
+function revPay(s,a){let p=paidOf(s),t=Math.round(((s.credit||0)-a)*100)/100;while(t<-1e-9&&p>0){p--;t=Math.round((t+cc(s,p))*100)/100}return{p,t:t<0?0:t}}
+function editPay(pid){const o=D.pay.find(x=>x.id===pid);if(!o)return;const back=o.studentId&&D.students.some(x=>x.id===o.studentId)?`info('${o.studentId}')`:`document.getElementById('dg').close()`;
+ $('dgc').innerHTML=`<h3>Payment edit: ${esc(o.studentName||'')}</h3><div class="f"><div><label>Fee jama karne ki date</label><input id="pe_date" type="date" value="${o.date}"></div><div><label>Amount (₹)</label><input id="pe_amt" type="number" min="1" value="${o.amt}"></div><div><label>Mode</label><select id="pe_mode">${['Cash','UPI','Other','Import'].map(x=>`<option${x===o.mode?' selected':''}>${x}</option>`).join('')}</select></div></div><p style="font-size:.8rem;color:var(--mu)">Amount badalne par student ki due date aur pending apne aap dobara theek ho jayegi.</p><button class="btn s" onclick="savePayEdit('${pid}')">Save</button> <button class="btn o s" onclick="${back}">Cancel</button> <button class="btn r s" onclick="delPay('${pid}')">Delete payment</button>`;openDg()}
+async function savePayEdit(pid){const o=D.pay.find(x=>x.id===pid),s=D.students.find(x=>x.id===o.studentId),amt=+$('pe_amt').value;if(!(amt>0))return alert('Amount likhiye');
+ const u={amt,date:$('pe_date').value||o.date,mode:$('pe_mode').value};
+ try{const b=writeBatch(db);if(s){const r=revPay(s,o.amt),s2={...s,paid:r.p,credit:r.t},{m,r:c}=payCalc(s2,amt);u.months=m;b.update(doc(db,'students',s.id),{paid:paidOf(s2)+m,credit:c})}
+  b.update(doc(db,'payments',pid),u);await b.commit();s?info(s.id):$('dg').close()}catch(e){alert(e.code||e.message)}}
+async function delPay(pid){const o=D.pay.find(x=>x.id===pid),s=D.students.find(x=>x.id===o.studentId);if(!confirm(inr(o.amt)+' ki ye payment delete karein? Student ki fee wapas pending ho jayegi.'))return;
+ try{const b=writeBatch(db);if(s){const r=revPay(s,o.amt);b.update(doc(db,'students',s.id),{paid:r.p,credit:r.t})}b.delete(doc(db,'payments',pid));await b.commit();s?info(s.id):$('dg').close()}catch(e){alert(e.code||e.message)}}
+Object.assign(window,{editPay,savePayEdit,delPay});
 function impPlan(st,fd,bs){const mk=[bs.slice(0,7),addM(bs,1).slice(0,7)];let p=0;while(addM(st.joined,p)<bs&&p<600)p++;let ex=0;const pays=[];
  mk.forEach((k,i)=>{let c=-1;for(let n=0;n<600;n++){const d=addM(st.joined,n).slice(0,7);if(d===k){c=n;break}if(d>k)break}const dt=pdte(fd[i]);if(c<0||!dt)return;pays.push(dt);if(c===p)p++;else ex++});return{paid:p,extra:ex,pays}}
 const billStart=()=>($('bm').value||'2026-08')+'-01';
