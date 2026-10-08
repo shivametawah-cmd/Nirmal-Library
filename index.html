@@ -106,7 +106,7 @@ th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}tr:hover td{ba
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,sendPasswordResetEmail,signOut}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import{getFirestore,collection,doc,addDoc,updateDoc,deleteDoc,writeBatch,getDoc,setDoc,onSnapshot,query,orderBy,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import{getFirestore,collection,doc,addDoc,updateDoc,deleteDoc,writeBatch,getDoc,setDoc,deleteField,onSnapshot,query,orderBy,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 // Firebase config for project nirmal-library-4ca55
 const firebaseConfig={apiKey:"AIzaSyAIOLojqyNRl0YC9pQDWG6ohQdxU5TshMs",authDomain:"nirmal-library-4ca55.firebaseapp.com",projectId:"nirmal-library-4ca55",storageBucket:"nirmal-library-4ca55.firebasestorage.app",messagingSenderId:"527391687606",appId:"1:527391687606:web:e600cdf422f6974d4ef717"};
 const PER=10,CONFIGURED=true;
@@ -164,7 +164,10 @@ async function saveAdj(id){const s=D.students.find(x=>x.id===id),c=+$('a_c').val
  const s2={...s,adj:{...(s.adj||{}),[c]:amt}},{m,r}=payCalc(s2,0),u={['adj.'+c]:amt,['adjn.'+c]:note};
  if(m>0){u.paid=paidOf(s2)+m+(s.extra||0);u.extra=0;u.credit=r}
  try{await updateDoc(doc(db,'students',id),u);info(id)}catch(e){alert(e.code||e.message)}}
-function adjl(s){const k=Object.keys(s.adj||{}).sort((a,b)=>a-b);return k.length?`<h4 style="margin:10px 0 4px">Fee adjustments</h4>`+k.map(c=>`<div>${addM(s.joined,+c)} cycle: ${inr(s.adj[c])} (${esc((s.adjn||{})[c]||'')})</div>`).join(''):''}
+function adjDel(s,c){const p=paidOf(s);if(!(c<p))return{};let cr=s.credit||0;for(let k=c;k<p;k++)cr+=cc(s,k);const adj={...(s.adj||{})};delete adj[c];const s2={...s,adj,paid:c,credit:cr},{m,r}=payCalc(s2,0);return{paid:paidOf(s2)+m,credit:r}}
+async function delAdj(id,c){const s=D.students.find(x=>x.id===id);if(!confirm('Remove this adjustment? That month goes back to the full fee of '+inr(s.fee)+'.'))return;
+ try{await updateDoc(doc(db,'students',id),{['adj.'+c]:deleteField(),['adjn.'+c]:deleteField(),...adjDel(s,c)});info(id)}catch(e){alert(e.code||e.message)}}
+function adjl(s){const k=Object.keys(s.adj||{}).sort((a,b)=>a-b);return k.length?`<h4 style="margin:10px 0 4px">Fee adjustments</h4>`+k.map(c=>`<div>${addM(s.joined,+c)} cycle: ${inr(s.adj[c])} (${esc((s.adjn||{})[c]||'')}) <button class="btn r s" onclick="delAdj('${s.id}',${c})">Remove</button></div>`).join(''):''}
 function revPay(s,a){let p=paidOf(s),t=Math.round(((s.credit||0)-a)*100)/100;while(t<-1e-9&&p>0){p--;t=Math.round((t+cc(s,p))*100)/100}return{p,t:t<0?0:t}}
 function editPay(pid){const o=D.pay.find(x=>x.id===pid);if(!o)return;const back=o.studentId&&D.students.some(x=>x.id===o.studentId)?`info('${o.studentId}')`:`document.getElementById('dg').close()`;
  $('dgc').innerHTML=`<h3>Payment edit: ${esc(o.studentName||'')}</h3><div class="f"><div><label>Payment date</label><input id="pe_date" type="date" value="${o.date}"></div><div><label>Amount (₹)</label><input id="pe_amt" type="number" min="1" value="${o.amt}"></div><div><label>Mode</label><select id="pe_mode">${['Cash','UPI','Other','Import'].map(x=>`<option${x===o.mode?' selected':''}>${x}</option>`).join('')}</select></div></div><p style="font-size:.8rem;color:var(--mu)">Changing the amount automatically recalculates the student's due date and pending balance.</p><button class="btn s" onclick="savePayEdit('${pid}')">Save</button> <button class="btn o s" onclick="${back}">Cancel</button> <button class="btn r s" onclick="delPay('${pid}')">Delete payment</button>`;openDg()}
@@ -240,7 +243,7 @@ const billStart=()=>($('bm').value||'2026-08')+'-01';
 async function resetBilling(){const st=billStart(),L=D.students.filter(s=>s.joined&&s.joined<st);if(!L.length)return alert('No students found');
  if(!confirm('Billing will start from '+st.slice(0,7)+' for '+L.length+' students (earlier months are treated as paid). Continue?'))return;
  try{for(let i=0;i<L.length;i+=400){const b=writeBatch(db);L.slice(i,i+400).forEach(s=>{let n=0;while(addM(s.joined,n)<st&&n<600)n++;b.update(doc(db,'students',s.id),{paid:n,extra:0,credit:0})});await b.commit()}alert('Done: '+L.length+' students updated')}catch(e){alert(e.code||e.message)}}
-Object.assign(window,{payPrev,savePay,resetBilling,adjust,adjPrev,saveAdj});
+Object.assign(window,{payPrev,savePay,resetBilling,adjust,adjPrev,saveAdj,delAdj});
 
 const FF=[['name','Name *'],['gender','Gender','sel',['Male','Female','Other']],['father','Father name'],['mother','Mother name'],['phone','Mobile no *','tel'],['phone2','Contact number','tel'],['dob','Date of birth','date'],['email','Email id','email'],['address','Address'],['aadhar4','Aadhaar last 4 digits'],['joined','Admission date','date'],['shift','Shift','list',['8:00 AM - 2:00 PM','2:00 PM - 8:00 PM','8:00 AM - 8:00 PM']],['prep','Preparing for','list',['UP Police','SSC','Railway','Others']],['seat','Seat no.'],['fee','Monthly fee (₹)','number'],['pd','First month fee','pd']];
 function buildForm(){$('af').innerHTML=FF.map(([k,l,t,o])=>{const id='f_'+k;let i;
@@ -299,13 +302,14 @@ function fh(pre,[k,l,t,o]){const id=pre+k;let i;
  else i=`<input id="${id}" type="${t||'text'}">`;return`<div><label>${l}</label>${i}</div>`}
 const EF=()=>[...FF.filter(f=>f[0]!=='pd'),['due','Next due date','date']];
 function edit(id){const s=D.students.find(x=>x.id===id);
- $('dgc').innerHTML=`<h3>Edit: ${esc(s.name)}</h3><div class="f">${EF().map(f=>fh('e_',f)).join('')}<div><label>Photo upload / replace</label><input id="e_photo" type="file" accept="image/*"></div><div><label>Aadhaar card image upload / replace</label><input id="e_aad" type="file" accept="image/*"></div></div><br><button class="btn s" onclick="saveEdit('${id}')">Save</button> <button class="btn o s" onclick="info('${id}')">Cancel</button> <span id="eem"></span>`;
+ $('dgc').innerHTML=`<h3>Edit: ${esc(s.name)}</h3><div class="f">${EF().map(f=>fh('e_',f)).join('')}<div><label>Photo upload / replace</label><input id="e_photo" type="file" accept="image/*"></div><div><label>Aadhaar card image upload / replace</label><input id="e_aad" type="file" accept="image/*"></div></div><p class="mu">Tip: if you only correct the admission date, the months already paid are kept and the next due date moves to match the new date. To set the due date yourself, change "Next due date" as well.</p><button class="btn s" onclick="saveEdit('${id}')">Save</button> <button class="btn o s" onclick="info('${id}')">Cancel</button> <span id="eem"></span>`;
  EF().forEach(([k])=>{$('e_'+k).value=s[k]??''});$('e_due').value=dueOf(s)}
-async function saveEdit(id){const g=k=>$('e_'+k).value.trim(),name=g('name');if(!name||!g('phone'))return alert('Name and mobile number are required');
+async function saveEdit(id){const s=D.students.find(x=>x.id===id),g=k=>$('e_'+k).value.trim(),name=g('name');if(!name||!g('phone'))return alert('Name and mobile number are required');
  $('eem').textContent='Saving...';
- try{const u={};EF().forEach(([k])=>{u[k]=g(k)});u.fee=+u.fee||0;{const jn=u.joined||s.joined,same=u.due===dueOf(s);let dd=u.due||dueOf(s);
-  if(dd<jn){alert('Next due date cannot be earlier than the admission date ('+jn+'). It has been set to the admission date.');dd=jn}
-  if(same&&dd===u.due){u.paid=paidOf(s);u.extra=s.extra||0}else{let n=0;while(addM(jn,n)<dd&&n<600)n++;u.paid=n;u.extra=0}delete u.due}u.aadhar4=u.aadhar4.replace(/\D/g,'').slice(-4);
+ try{const u={};EF().forEach(([k])=>{u[k]=g(k)});u.fee=+u.fee||0;{const jn=u.joined||s.joined,od=dueOf(s),same=u.due===od;
+  if(same){u.paid=paidOf(s);u.extra=s.extra||0}
+  else{let dd=u.due||od;if(dd<jn){alert('Next due date cannot be earlier than the admission date ('+jn+'). It has been set to the admission date.');dd=jn}let n=0;while(addM(jn,n)<dd&&n<600)n++;u.paid=n;u.extra=0}
+  delete u.due}u.aadhar4=u.aadhar4.replace(/\D/g,'').slice(-4);
   const [photo,aadhar]=await Promise.all([shrink($('e_photo').files[0],500),shrink($('e_aad').files[0],1000)]),fl={};
   if(photo)fl.photo=photo;if(aadhar)fl.aadhar=aadhar;
   await updateDoc(doc(db,'students',id),u);if(photo||aadhar)await setDoc(doc(db,'studentFiles',id),fl,{merge:true});
