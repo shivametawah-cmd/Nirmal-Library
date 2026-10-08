@@ -65,11 +65,12 @@ th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}tr:hover td{ba
 <p style="font-size:.78rem">Admin accounts are created in Firebase Console &gt; Authentication.</p></div>
 
 <div id="panel" class="hide">
-<div class="ab"><span class="br">📚 Nirmal Library · Admin</span>
-<div class="tabs"><button class="tab act" data-t="dash" onclick="tab('dash')">Dashboard</button><button class="tab" data-t="stu" onclick="tab('stu')">Students</button><button class="tab" data-t="exp" onclick="tab('exp')">Expenses</button></div>
+<div class="ab"><span class="br">📚 Nirmal Library · Admin <span id="rb" class="b off" style="font-size:.7rem;vertical-align:middle"></span></span>
+<div class="tabs"><button class="tab act" data-t="dash" onclick="tab('dash')">Dashboard</button><button class="tab" data-t="stu" onclick="tab('stu')">Students</button><button class="tab" data-t="exp" onclick="tab('exp')">Expenses</button><button class="tab" data-t="apr" onclick="tab('apr')">Approvals <span id="aprn" style="display:none;background:var(--bad);color:#fff;border-radius:99px;padding:0 7px;font-size:.72rem"></span></button></div>
 <button class="btn" onclick="openAdm()">+ New Admission</button><button class="btn o s" onclick="logout()">Logout</button></div>
 
 <div id="t_dash">
+<div id="aban" class="hide c" style="cursor:pointer;border-left:4px solid var(--ac2);margin-bottom:14px;font-weight:600" onclick="tab('apr')"></div>
 <div class="g" id="stats"></div>
 <div class="gc" id="charts"></div>
 <div class="c" style="margin-bottom:16px"><h3>Pending Fees</h3><div class="tw" id="pend"></div></div>
@@ -100,6 +101,7 @@ th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}tr:hover td{ba
 <div class="c"><div class="row"><h3>Expense Register</h3><select id="x_c" style="max-width:220px" onchange="xSel()"></select></div><div class="tw" id="xlist"></div>
 <div class="pg"><button class="btn o s" onclick="xPrev()">‹ Prev</button><span id="xpi"></span><button class="btn o s" onclick="xNext()">Next ›</button></div></div>
 </div>
+<div id="t_apr" class="hide"><div class="c"><div class="row"><h3>Approval Requests</h3><span class="mu" id="aprh"></span></div><div class="tw" id="aprl"></div><div class="pg"><button class="btn o s" onclick="aPrev()">‹ Prev</button><span id="apri"></span><button class="btn o s" onclick="aNext()">Next ›</button></div></div></div>
 </div></div>
 
 <dialog id="dg" style="max-width:520px;width:92%;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:12px;font-family:system-ui,sans-serif"><div id="dgc"></div><br><button class="btn s" onclick="document.getElementById('dg').close()">Close</button></dialog>
@@ -113,7 +115,7 @@ import{getFirestore,collection,doc,addDoc,updateDoc,deleteDoc,writeBatch,getDoc,
 // Firebase config for project nirmal-library-4ca55
 const firebaseConfig={apiKey:"AIzaSyAIOLojqyNRl0YC9pQDWG6ohQdxU5TshMs",authDomain:"nirmal-library-4ca55.firebaseapp.com",projectId:"nirmal-library-4ca55",storageBucket:"nirmal-library-4ca55.firebasestorage.app",messagingSenderId:"527391687606",appId:"1:527391687606:web:e600cdf422f6974d4ef717"};
 const PER=10,CONFIGURED=true;
-let D={students:[],pay:[],exp:[],rec:{},trash:[]},pgn=0,authed=false,auth,db,unsubs=[];
+let D={students:[],pay:[],exp:[],rec:{},trash:[],apr:[]},pgn=0,authed=false,ROLE='user',auth,db,unsubs=[];
 if(CONFIGURED){const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app)}
 const $=i=>document.getElementById(i),inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
 const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),today=()=>iso(new Date());
@@ -128,10 +130,12 @@ async function forgot(){if(!CONFIGURED){$('le').textContent='Add your Firebase c
  $('le').textContent='If this email belongs to an admin account, a password reset link has been sent. Check your inbox/spam.'}
 function logout(){signOut(auth)}
 if(CONFIGURED)onAuthStateChanged(auth,u=>{unsubs.forEach(f=>f());unsubs=[];authed=!!u;
- if(u){unsubs.push(onSnapshot(query(collection(db,'students'),orderBy('createdAt','desc')),s=>{const all=s.docs.map(d=>({id:d.id,...d.data()}));D.students=all.filter(x=>!x.deleted);D.trash=all.filter(x=>x.deleted);render()},e=>alert('Students: '+e.code)));
+ if(u){getDoc(doc(db,'roles',u.uid)).then(r=>{ROLE=r.exists()&&r.data().role==='approver'?'approver':'user';render()}).catch(()=>{ROLE='user';render()});
+  unsubs.push(onSnapshot(query(collection(db,'students'),orderBy('createdAt','desc')),s=>{const all=s.docs.map(d=>({id:d.id,...d.data()}));D.students=all.filter(x=>!x.deleted);D.trash=all.filter(x=>x.deleted);render()},e=>alert('Students: '+e.code)));
   unsubs.push(onSnapshot(collection(db,'payments'),s=>{D.pay=s.docs.map(d=>({id:d.id,...d.data()}));render()},e=>alert('Payments: '+e.code)));
-  unsubs.push(onSnapshot(collection(db,'expenses'),s=>{D.exp=s.docs.map(d=>({id:d.id,...d.data()}));render()},e=>alert('Expenses: '+e.code)));unsubs.push(onSnapshot(doc(db,'settings','recurring'),s=>{D.rec=s.exists()?s.data().amts||{}:{};drawRec()},e=>{}))}
- else{D={students:[],pay:[],exp:[],rec:{},trash:[]}}render()});
+  unsubs.push(onSnapshot(collection(db,'expenses'),s=>{D.exp=s.docs.map(d=>({id:d.id,...d.data()}));render()},e=>alert('Expenses: '+e.code)));unsubs.push(onSnapshot(doc(db,'settings','recurring'),s=>{D.rec=s.exists()?s.data().amts||{}:{};drawRec()},e=>{}));
+  unsubs.push(onSnapshot(collection(db,'approvals'),s=>{D.apr=s.docs.map(d=>({id:d.id,...d.data()}));render()},e=>alert('Approvals: '+e.code)))}
+ else{ROLE='user';D={students:[],pay:[],exp:[],rec:{},trash:[],apr:[]}}render()});
 const cyc=s=>{let n=0;while(addM(s.joined||today(),n)<today()&&n<600)n++;return n};
 const cc=(s,c)=>s.adj&&s.adj[c]!=null?s.adj[c]:s.fee;
 const paidOf=s=>{let n=0;if(s.paid!=null)n=s.paid;else while(s.due&&addM(s.joined||today(),n)<s.due&&n<600)n++;while(s.adj&&s.adj[n]===0&&n<600)n++;return n};
@@ -159,27 +163,53 @@ async function savePay(id){const s=D.students.find(x=>x.id===id),amt=+$('p_amt')
 const clen=(s,c)=>diff(addM(s.joined,c+1),addM(s.joined,c));
 function adjust(id){const s=D.students.find(x=>x.id===id),p0=paidOf(s),e=Math.min(Math.max(cyc(s),p0)+1,p0+12);let o='';
  for(let c=p0;c<e;c++)o+=`<option value="${c}">${addM(s.joined,c)} cycle (currently ${inr(cc(s,c))})</option>`;
- $('dgc').innerHTML=`<h3>Fee adjust: ${esc(s.name)}</h3><div class="f"><div><label>Billing month</label><select id="a_c" onchange="adjPrev('${id}')">${o}</select></div><div><label>Action</label><select id="a_t" onchange="adjPrev('${id}')"><option value="full">Full fee (${inr(s.fee)})</option><option value="waive">Waive off (₹0)</option><option value="days">Attended only some days (prorate)</option></select></div><div><label>Days attended</label><input id="a_d" type="number" min="1" value="15" oninput="adjPrev('${id}')"></div><div><label>Fee for this month (₹)</label><input id="a_amt" type="number" min="0"></div></div><p id="a_p" style="font-size:.85rem;color:var(--mu)"></p><button class="btn s" onclick="saveAdj('${id}')">Save</button> <button class="btn o s" onclick="info('${id}')">Cancel</button>`;adjPrev(id);openDg()}
+ $('dgc').innerHTML=`<h3>Fee adjust: ${esc(s.name)}</h3><div class="f"><div><label>Billing month</label><select id="a_c" onchange="adjPrev('${id}')">${o}</select></div><div><label>Action</label><select id="a_t" onchange="adjPrev('${id}')"><option value="full">Full fee (${inr(s.fee)})</option><option value="waive">Waive off (₹0)</option><option value="days">Attended only some days (prorate)</option></select></div><div><label>Days attended</label><input id="a_d" type="number" min="1" value="15" oninput="adjPrev('${id}')"></div><div><label>Fee for this month (₹)</label><input id="a_amt" type="number" min="0"></div></div><p id="a_p" style="font-size:.85rem;color:var(--mu)"></p>${ROLE==='approver'?'':'<p class="mu">This change will be sent to the approver and applied only after approval.</p>'}<button class="btn s" onclick="saveAdj('${id}')">Save</button> <button class="btn o s" onclick="info('${id}')">Cancel</button>`;adjPrev(id);openDg()}
 function adjPrev(id){const s=D.students.find(x=>x.id===id),c=+$('a_c').value,t=$('a_t').value,len=clen(s,c),d=Math.min(+$('a_d').value||0,len);$('a_d').disabled=t!=='days';
  $('a_amt').value=t==='waive'?0:t==='days'?Math.round(s.fee*d/len):s.fee;
  $('a_p').textContent=t==='days'?`This month has ${len} days: ${inr(s.fee)} × ${d}/${len} = ${inr($('a_amt').value)} (you can edit the amount)`:t==='waive'?'Fee for this month will be waived.':''}
+function adjUpdate(s,c,amt,note){const s2={...s,adj:{...(s.adj||{}),[c]:amt}},{m,r}=payCalc(s2,0),u={['adj.'+c]:amt,['adjn.'+c]:note};if(m>0){u.paid=paidOf(s2)+m+(s.extra||0);u.extra=0;u.credit=r}return u}
+async function requestChange(type,s,data,summary){await addDoc(collection(db,'approvals'),{type,studentId:s.id,studentName:s.name,data,summary,status:'pending',requestedBy:auth.currentUser.uid,requestedByEmail:auth.currentUser.email||'',requestedAt:serverTimestamp()})}
 async function saveAdj(id){const s=D.students.find(x=>x.id===id),c=+$('a_c').value,t=$('a_t').value,amt=Math.max(0,+$('a_amt').value||0),note=t==='waive'?'waive off':t==='days'?$('a_d').value+' days':(amt===s.fee?'full fee':'custom fee');
- const s2={...s,adj:{...(s.adj||{}),[c]:amt}},{m,r}=payCalc(s2,0),u={['adj.'+c]:amt,['adjn.'+c]:note};
- if(m>0){u.paid=paidOf(s2)+m+(s.extra||0);u.extra=0;u.credit=r}
- try{await updateDoc(doc(db,'students',id),u);info(id)}catch(e){alert(e.code||e.message)}}
+ try{if(ROLE!=='approver'){await requestChange('adjust',s,{c,amt,note},s.name+': '+addM(s.joined,c)+' cycle fee '+inr(cc(s,c))+' → '+inr(amt)+' ('+note+')');alert('Request sent to the approver. The change will apply only after approval.');return info(id)}
+  await updateDoc(doc(db,'students',id),adjUpdate(s,c,amt,note));info(id)}catch(e){alert(e.code||e.message)}}
+function applyReq(s,a){const d=a.data||{};
+ if(a.type==='joined')return{u:{joined:d.newJoined}};
+ if(a.type==='fee')return{u:{fee:d.newFee}};
+ if(a.type==='stu_del')return{u:{deleted:true,deletedAt:today()}};
+ if(a.type==='due'){if(d.newDue<s.joined)return{err:'The requested due date is earlier than the admission date, so it cannot be applied.'};let n=0;while(addM(s.joined,n)<d.newDue&&n<600)n++;return{u:{paid:n,extra:0}}}
+ if(a.type==='adjust'){if(d.c<paidOf(s))return{err:'That month is already paid or passed, so this adjustment can no longer be applied.'};return{u:adjUpdate(s,d.c,d.amt,d.note)}}
+ if(a.type==='adj_remove')return{u:{['adj.'+d.c]:deleteField(),['adjn.'+d.c]:deleteField(),...adjDel(s,d.c)}};
+ if(a.type==='pay_edit'||a.type==='pay_del'){const o=D.pay.find(x=>x.id===d.pid);if(!o)return{err:'This payment no longer exists.'};const r={pid:d.pid};
+  if(a.type==='pay_edit'){r.payUpd={amt:d.amt,date:d.date,mode:d.mode};if(s){const rv=revPay(s,o.amt),s2={...s,paid:rv.p,credit:rv.t},{m,r:c}=payCalc(s2,d.amt);r.payUpd.months=m;r.u={paid:paidOf(s2)+m,credit:c}}}
+  else{r.payDel=true;if(s){const rv=revPay(s,o.amt);r.u={paid:rv.p,credit:rv.t}}}
+  return r}
+ return{err:'Unknown request type'}}
+async function decide(id,ok){const a=D.apr.find(x=>x.id===id);if(!a||ROLE!=='approver')return;let note='';
+ if(ok){if(!confirm('Approve: '+a.summary+' ?'))return}else{const r=prompt('Reason for rejection (optional)');if(r===null)return;note=r}
+ try{const b=writeBatch(db);
+  if(ok){const s=D.students.find(x=>x.id===a.studentId),py=a.type.startsWith('pay_');if(!s&&!py)return alert('Student not found (deleted or in the recycle bin). Restore the student first.');const r=applyReq(s,a);if(r.err)return alert(r.err);if(r.u)b.update(doc(db,'students',s.id),r.u);if(r.payUpd)b.update(doc(db,'payments',r.pid),r.payUpd);if(r.payDel)b.delete(doc(db,'payments',r.pid))}
+  b.update(doc(db,'approvals',id),{status:ok?'approved':'rejected',decidedBy:auth.currentUser.email||'',decidedAt:serverTimestamp(),note});await b.commit()}catch(e){alert(e.code||e.message)}}
+let apg=0;const tms=x=>x&&x.toMillis?x.toMillis():(x?+x:Date.now());
+function drawApr(){if(!authed||!$('aprl'))return;const L=[...D.apr].sort((a,b)=>(a.status==='pending'?0:1)-(b.status==='pending'?0:1)||tms(b.requestedAt)-tms(a.requestedAt)),pages=Math.max(1,Math.ceil(L.length/PER));apg=Math.min(Math.max(0,apg),pages-1);
+ $('aprh').textContent=ROLE==='approver'?'Review requests from staff. Approving applies the change immediately.':'Fee waivers, adjustments and admission-date changes you request take effect only after the approver approves them.';
+ const r=L.slice(apg*PER,apg*PER+PER);
+ $('aprl').innerHTML=r.length?`<table><tr><th>Requested</th><th>By</th><th>Student</th><th>Change</th><th>Status</th><th></th></tr>${r.map(a=>`<tr><td>${new Date(tms(a.requestedAt)).toLocaleDateString('en-IN')}</td><td>${esc(a.requestedByEmail||'')}</td><td>${esc(a.studentName||'')}</td><td style="white-space:normal;min-width:220px">${esc(a.summary||'')}</td><td><span class="b ${a.status==='approved'?'on':'off'}">${a.status}</span>${a.status==='rejected'&&a.note?' <small>'+esc(a.note)+'</small>':''}${a.decidedBy?'<br><small>by '+esc(a.decidedBy)+'</small>':''}</td><td>${ROLE==='approver'&&a.status==='pending'?`<button class="btn s" onclick="decide('${a.id}',true)">Approve</button> <button class="btn r s" onclick="decide('${a.id}',false)">Reject</button>`:''}</td></tr>`).join('')}</table>`:'<p class="mu">No requests yet.</p>';
+ $('apri').textContent=`Page ${apg+1} of ${pages} · ${L.length} requests`}
+Object.assign(window,{decide,aPrev:()=>{apg--;drawApr()},aNext:()=>{apg++;drawApr()}});
 function adjDel(s,c){const p=paidOf(s);if(!(c<p))return{};let cr=s.credit||0;for(let k=c;k<p;k++)cr+=cc(s,k);const adj={...(s.adj||{})};delete adj[c];const s2={...s,adj,paid:c,credit:cr},{m,r}=payCalc(s2,0);return{paid:paidOf(s2)+m,credit:r}}
 async function delAdj(id,c){const s=D.students.find(x=>x.id===id);if(!confirm('Remove this adjustment? That month goes back to the full fee of '+inr(s.fee)+'.'))return;
- try{await updateDoc(doc(db,'students',id),{['adj.'+c]:deleteField(),['adjn.'+c]:deleteField(),...adjDel(s,c)});info(id)}catch(e){alert(e.code||e.message)}}
+ try{if(ROLE!=='approver'){await requestChange('adj_remove',s,{c},s.name+': remove adjustment on the '+addM(s.joined,c)+' cycle (fee back to '+inr(s.fee)+')');alert('Request sent to the approver. The change will apply only after approval.');return info(id)}await updateDoc(doc(db,'students',id),{['adj.'+c]:deleteField(),['adjn.'+c]:deleteField(),...adjDel(s,c)});info(id)}catch(e){alert(e.code||e.message)}}
 function adjl(s){const k=Object.keys(s.adj||{}).sort((a,b)=>a-b);return k.length?`<h4 style="margin:10px 0 4px">Fee adjustments</h4>`+k.map(c=>`<div>${addM(s.joined,+c)} cycle: ${inr(s.adj[c])} (${esc((s.adjn||{})[c]||'')})${s.deleted?'':` <button class="btn r s" onclick="delAdj('${s.id}',${c})">Remove</button>`}</div>`).join(''):''}
 function revPay(s,a){let p=paidOf(s),t=Math.round(((s.credit||0)-a)*100)/100;while(t<-1e-9&&p>0){p--;t=Math.round((t+cc(s,p))*100)/100}return{p,t:t<0?0:t}}
 function editPay(pid){const o=D.pay.find(x=>x.id===pid);if(!o)return;const back=o.studentId&&D.students.some(x=>x.id===o.studentId)?`info('${o.studentId}')`:`document.getElementById('dg').close()`;
- $('dgc').innerHTML=`<h3>Payment edit: ${esc(o.studentName||'')}</h3><div class="f"><div><label>Payment date</label><input id="pe_date" type="date" value="${o.date}"></div><div><label>Amount (₹)</label><input id="pe_amt" type="number" min="1" value="${o.amt}"></div><div><label>Mode</label><select id="pe_mode">${['Cash','UPI','Other','Import'].map(x=>`<option${x===o.mode?' selected':''}>${x}</option>`).join('')}</select></div></div><p style="font-size:.8rem;color:var(--mu)">Changing the amount automatically recalculates the student's due date and pending balance.</p><button class="btn s" onclick="savePayEdit('${pid}')">Save</button> <button class="btn o s" onclick="${back}">Cancel</button> <button class="btn r s" onclick="delPay('${pid}')">Delete payment</button>`;openDg()}
+ $('dgc').innerHTML=`<h3>Payment edit: ${esc(o.studentName||'')}</h3><div class="f"><div><label>Payment date</label><input id="pe_date" type="date" value="${o.date}"></div><div><label>Amount (₹)</label><input id="pe_amt" type="number" min="1" value="${o.amt}"></div><div><label>Mode</label><select id="pe_mode">${['Cash','UPI','Other','Import'].map(x=>`<option${x===o.mode?' selected':''}>${x}</option>`).join('')}</select></div></div><p style="font-size:.8rem;color:var(--mu)">Changing the amount automatically recalculates the student's due date and pending balance.${ROLE==='approver'?'':' Your change will be sent to the approver and applied only after approval.'}</p><button class="btn s" onclick="savePayEdit('${pid}')">Save</button> <button class="btn o s" onclick="${back}">Cancel</button> <button class="btn r s" onclick="delPay('${pid}')">Delete payment</button>`;openDg()}
 async function savePayEdit(pid){const o=D.pay.find(x=>x.id===pid),s=D.students.find(x=>x.id===o.studentId),amt=+$('pe_amt').value;if(!(amt>0))return alert('Enter an amount');
  const u={amt,date:$('pe_date').value||o.date,mode:$('pe_mode').value};
+ if(ROLE!=='approver'){try{await requestChange('pay_edit',{id:o.studentId||'',name:o.studentName||''},{pid,amt:u.amt,date:u.date,mode:u.mode},(o.studentName||'')+': payment '+inr(o.amt)+' on '+o.date+' → '+inr(u.amt)+' on '+u.date+' ('+u.mode+')');alert('Request sent to the approver. The payment changes only after approval.');return s?info(s.id):$('dg').close()}catch(e){return alert(e.code||e.message)}}
  try{const b=writeBatch(db);if(s){const r=revPay(s,o.amt),s2={...s,paid:r.p,credit:r.t},{m,r:c}=payCalc(s2,amt);u.months=m;b.update(doc(db,'students',s.id),{paid:paidOf(s2)+m,credit:c})}
   b.update(doc(db,'payments',pid),u);await b.commit();s?info(s.id):$('dg').close()}catch(e){alert(e.code||e.message)}}
 async function delPay(pid){const o=D.pay.find(x=>x.id===pid),s=D.students.find(x=>x.id===o.studentId);if(!confirm(inr(o.amt)+' payment will be deleted and the fee will return to pending. Continue?'))return;
- try{const b=writeBatch(db);if(s){const r=revPay(s,o.amt);b.update(doc(db,'students',s.id),{paid:r.p,credit:r.t})}b.delete(doc(db,'payments',pid));await b.commit();s?info(s.id):$('dg').close()}catch(e){alert(e.code||e.message)}}
+ try{if(ROLE!=='approver'){await requestChange('pay_del',{id:o.studentId||'',name:o.studentName||''},{pid},(o.studentName||'')+': delete payment of '+inr(o.amt)+' dated '+o.date);alert('Request sent to the approver. The payment is deleted only after approval.');return s?info(s.id):$('dg').close()}const b=writeBatch(db);if(s){const r=revPay(s,o.amt);b.update(doc(db,'students',s.id),{paid:r.p,credit:r.t})}b.delete(doc(db,'payments',pid));await b.commit();s?info(s.id):$('dg').close()}catch(e){alert(e.code||e.message)}}
 Object.assign(window,{editPay,savePayEdit,delPay});
 let mpg=0,ppg=0;
 function pickMonth(k){$('mm').value=k;mpg=0;monthly()}
@@ -221,7 +251,7 @@ function drawExp(){if(!authed||!$('x_m'))return;const m=$('x_m').value||($('x_m'
  const r=L.slice(xpg*PER,xpg*PER+PER);
  $('xlist').innerHTML=r.length?`<table><tr><th>Date</th><th>Category</th><th>Description</th><th>Paid To</th><th>Mode</th><th>Amount</th><th></th></tr>${r.map(e=>`<tr><td>${e.date}</td><td>${esc(e.cat)}</td><td>${esc(e.desc||'')}</td><td>${esc(e.vendor||'')}</td><td>${esc(e.mode||'')}</td><td>${inr(e.amt)}</td><td><button class="btn o s" onclick="editExp('${e.id}')">Edit</button></td></tr>`).join('')}</table>`:'<p class="mu">No expenses found.</p>';
  $('xpi').textContent=`Page ${xpg+1} of ${pages} · ${L.length} entries · ${inr(sum(L))}`}
-function tab(t){['dash','stu','exp'].forEach(x=>$('t_'+x).classList.toggle('hide',x!==t));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('act',b.dataset.t===t))}
+function tab(t){['dash','stu','exp','apr'].forEach(x=>$('t_'+x).classList.toggle('hide',x!==t));document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('act',b.dataset.t===t))}
 Object.assign(window,{addExp,editExp,saveExp,delExp,saveRec,addRec,tab,xSel:()=>{xpg=0;drawExp()},xPrev:()=>{xpg--;drawExp()},xNext:()=>{xpg++;drawExp()},openAdm:()=>{buildForm();$('am').textContent='';$('adm').showModal()},closeAdm:()=>$('adm').close()});
 const K=n=>n>=1e5?(n/1e5).toFixed(1).replace('.0','')+'L':n>=1e3?(n/1e3).toFixed(1).replace('.0','')+'k':String(Math.round(n));
 const hb=(rows,col)=>{const m=Math.max(1,...rows.map(r=>r[1]));return rows.map(([l,v,tx])=>`<div style="margin:9px 0"><div style="display:flex;justify-content:space-between;font-size:.82rem"><span>${esc(l)}</span><b>${tx}</b></div><div style="background:var(--bd);border-radius:4px;height:8px"><div style="background:${col};width:${v/m*100}%;height:8px;border-radius:4px"></div></div></div>`).join('')};
@@ -243,7 +273,7 @@ function charts(){if(!authed||!$('charts'))return;const t=today().slice(0,7),ks=
 function impPlan(st,fd,bs){const mk=[bs.slice(0,7),addM(bs,1).slice(0,7)];let p=0;while(addM(st.joined,p)<bs&&p<600)p++;let ex=0;const pays=[];
  mk.forEach((k,i)=>{let c=-1;for(let n=0;n<600;n++){const d=addM(st.joined,n).slice(0,7);if(d===k){c=n;break}if(d>k)break}const dt=pdte(fd[i]);if(c<0||!dt)return;pays.push(dt);if(c===p)p++;else ex++});return{paid:p,extra:ex,pays}}
 const billStart=()=>($('bm').value||'2026-08')+'-01';
-async function resetBilling(){const st=billStart(),L=D.students.filter(s=>s.joined&&s.joined<st);if(!L.length)return alert('No students found');
+async function resetBilling(){if(ROLE!=='approver')return alert('Only the approver can change the billing start for existing students.');const st=billStart(),L=D.students.filter(s=>s.joined&&s.joined<st);if(!L.length)return alert('No students found');
  if(!confirm('Billing will start from '+st.slice(0,7)+' for '+L.length+' students (earlier months are treated as paid). Continue?'))return;
  try{for(let i=0;i<L.length;i+=400){const b=writeBatch(db);L.slice(i,i+400).forEach(s=>{let n=0;while(addM(s.joined,n)<st&&n<600)n++;b.update(doc(db,'students',s.id),{paid:n,extra:0,credit:0})});await b.commit()}alert('Done: '+L.length+' students updated')}catch(e){alert(e.code||e.message)}}
 Object.assign(window,{payPrev,savePay,resetBilling,adjust,adjPrev,saveAdj,delAdj});
@@ -280,8 +310,8 @@ async function importXlsx(){const file=$('xf').files[0];if(!file)return alert('P
    const phone=String(o.phone||'').replace(/\D/g,'').slice(-10),name=String(o.name||'').trim();if(!phone||done.has(phone)){skip++;continue}done.add(phone);
    const t=x=>String(o[x]||'').trim(),old=ex.get(phone);
    if(old){if(!upd){skip++;continue}const u={},sv=(k,v)=>{if(v!==''&&v!=null)u[k]=v},st=t('status');
-    sv('name',t('name'));sv('gender',t('gender'));sv('father',t('father'));sv('mother',t('mother'));sv('phone2',t('phone2').replace(/\D/g,'').slice(-10));sv('dob',pdte(o.dob));sv('email',t('email'));sv('address',t('address'));sv('aadhar4',t('aadhar4').replace(/\D/g,'').slice(-4));sv('aadharUrl',t('aadharUrl'));sv('photoUrl',t('photoUrl'));sv('shift',t('shift'));sv('prep',t('prep'));sv('seat',t('seat'));if(+o.fee>0)u.fee=+o.fee;sv('joined',pdte(o.joined));if(st)u.active=!/^(not|in)/i.test(st);
-    const dd=pdte(o.due);if(dd){const jn=u.joined||old.joined;let n=0;while(addM(jn,n)<dd&&n<600)n++;u.paid=n;u.extra=0}
+    sv('name',t('name'));sv('gender',t('gender'));sv('father',t('father'));sv('mother',t('mother'));sv('phone2',t('phone2').replace(/\D/g,'').slice(-10));sv('dob',pdte(o.dob));sv('email',t('email'));sv('address',t('address'));sv('aadhar4',t('aadhar4').replace(/\D/g,'').slice(-4));sv('aadharUrl',t('aadharUrl'));sv('photoUrl',t('photoUrl'));sv('shift',t('shift'));sv('prep',t('prep'));sv('seat',t('seat'));if(+o.fee>0&&ROLE==='approver')u.fee=+o.fee;if(ROLE==='approver')sv('joined',pdte(o.joined));if(st)u.active=!/^(not|in)/i.test(st);
+    const dd=ROLE==='approver'?pdte(o.due):'';if(dd){const jn=u.joined||old.joined;let n=0;while(addM(jn,n)<dd&&n<600)n++;u.paid=n;u.extra=0}
     if(Object.keys(u).length)ups.push([old.id,u]);else skip++;continue}
    if(!name){skip++;continue}
    const joined=pdte(o.joined)||today();
@@ -297,7 +327,7 @@ async function importXlsx(){const file=$('xf').files[0];if(!file)return alert('P
 async function info(id){const s=D.students.find(x=>x.id===id)||D.trash.find(x=>x.id===id),L=[['Father',s.father],['Mother',s.mother],['Gender',s.gender],['DOB',s.dob],['Mobile',s.phone],['Contact',s.phone2],['Email',s.email],['Address',s.address],['Aadhaar (last 4)',s.aadhar4],['Shift',s.shift],['Preparing for',s.prep],['Seat',s.seat],['Admission',s.joined],['Monthly fee',inr(s.fee)],['Partial / advance paid',s.credit?inr(s.credit):'']];
  $('dgc').innerHTML=`<h3>${esc(s.name)}</h3><p>Loading...</p>`;openDg();let f={};try{const d=await getDoc(doc(db,'studentFiles',id));if(d.exists())f=d.data()}catch(e){}
  const lk=(u,t)=>u?`<a href="${esc(u)}" target="_blank" rel="noopener">${t} (Drive)</a>`:'';
- $('dgc').innerHTML=`<h3>${esc(s.name)}</h3>${f.photo?`<img src="${f.photo}" style="max-width:140px;border-radius:8px"><br>`:''}${L.map(x=>x[1]?`<div><span style="color:var(--mu)">${x[0]}:</span> ${esc(x[1])}</div>`:'').join('')}<p>${lk(s.photoUrl,'Photo')} ${lk(s.aadharUrl,'Aadhaar card')}</p>${f.aadhar?`<p>Aadhaar image:<br><img src="${f.aadhar}" style="max-width:100%;border-radius:8px"></p>`:''}${adjl(s)}${hist(id)}${s.deleted?`<p class="mu">This student is in the recycle bin (deleted on ${s.deletedAt||'-'}).</p><p><button class="btn s" onclick="restoreStu('${id}')">Restore student</button> <button class="btn r s" onclick="purge('${id}')">Delete forever</button></p>`:`<p><button class="btn s" onclick="collect('${id}')">₹ Collect Fee</button> <button class="btn o s" onclick="adjust('${id}')">Waive off / Prorate</button> <button class="btn o s" onclick="edit('${id}')">✎ Edit / Upload Documents</button></p>`}`}
+ $('dgc').innerHTML=`<h3>${esc(s.name)}</h3>${f.photo?`<img src="${f.photo}" style="max-width:140px;border-radius:8px"><br>`:''}${L.map(x=>x[1]?`<div><span style="color:var(--mu)">${x[0]}:</span> ${esc(x[1])}</div>`:'').join('')}<p>${lk(s.photoUrl,'Photo')} ${lk(s.aadharUrl,'Aadhaar card')}</p>${f.aadhar?`<p>Aadhaar image:<br><img src="${f.aadhar}" style="max-width:100%;border-radius:8px"></p>`:''}${adjl(s)}${hist(id)}${s.deleted?`<p class="mu">This student is in the recycle bin (deleted on ${s.deletedAt||'-'}).</p><p><button class="btn s" onclick="restoreStu('${id}')">Restore student</button>${ROLE==='approver'?` <button class="btn r s" onclick="purge('${id}')">Delete forever</button>`:''}</p>`:`<p><button class="btn s" onclick="collect('${id}')">₹ Collect Fee</button> <button class="btn o s" onclick="adjust('${id}')">Waive off / Prorate</button> <button class="btn o s" onclick="edit('${id}')">✎ Edit / Upload Documents</button></p>`}`}
 Object.assign(window,{importXlsx,tpl,info,admit,exportXlsx});
 function fh(pre,[k,l,t,o]){const id=pre+k;let i;
  if(t==='sel')i=`<select id="${id}">${o.map(x=>`<option>${x}</option>`).join('')}</select>`;
@@ -305,39 +335,44 @@ function fh(pre,[k,l,t,o]){const id=pre+k;let i;
  else i=`<input id="${id}" type="${t||'text'}">`;return`<div><label>${l}</label>${i}</div>`}
 const EF=()=>[...FF.filter(f=>f[0]!=='pd'),['due','Next due date','date']];
 function edit(id){const s=D.students.find(x=>x.id===id);
- $('dgc').innerHTML=`<h3>Edit: ${esc(s.name)}</h3><div class="f">${EF().map(f=>fh('e_',f)).join('')}<div><label>Photo upload / replace</label><input id="e_photo" type="file" accept="image/*"></div><div><label>Aadhaar card image upload / replace</label><input id="e_aad" type="file" accept="image/*"></div></div><p class="mu">Tip: if you only correct the admission date, the months already paid are kept and the next due date moves to match the new date. To set the due date yourself, change "Next due date" as well.</p><button class="btn s" onclick="saveEdit('${id}')">Save</button> <button class="btn o s" onclick="info('${id}')">Cancel</button> <span id="eem"></span>`;
+ $('dgc').innerHTML=`<h3>Edit: ${esc(s.name)}</h3><div class="f">${EF().map(f=>fh('e_',f)).join('')}<div><label>Photo upload / replace</label><input id="e_photo" type="file" accept="image/*"></div><div><label>Aadhaar card image upload / replace</label><input id="e_aad" type="file" accept="image/*"></div></div><p class="mu">Tip: if you only correct the admission date, the months already paid are kept and the next due date moves to match the new date. To set the due date yourself, change "Next due date" as well.${ROLE==='approver'?'':' <b>Changes to admission date, next due date or monthly fee need the approver\'s approval.</b>'}</p><button class="btn s" onclick="saveEdit('${id}')">Save</button> <button class="btn o s" onclick="info('${id}')">Cancel</button> <span id="eem"></span>`;
  EF().forEach(([k])=>{$('e_'+k).value=s[k]??''});$('e_due').value=dueOf(s)}
 async function saveEdit(id){const s=D.students.find(x=>x.id===id),g=k=>$('e_'+k).value.trim(),name=g('name');if(!name||!g('phone'))return alert('Name and mobile number are required');
  $('eem').textContent='Saving...';
- try{const u={};EF().forEach(([k])=>{u[k]=g(k)});u.fee=+u.fee||0;{const jn=u.joined||s.joined,od=dueOf(s),same=u.due===od;
+ try{const u={};EF().forEach(([k])=>{u[k]=g(k)});u.fee=+u.fee||0;let jreq=null;if(ROLE!=='approver'&&u.joined&&u.joined!==s.joined){jreq=u.joined;u.joined=s.joined}
+  let dreq=null,freq=null;if(ROLE!=='approver'){if(u.due&&u.due!==dueOf(s)){dreq=u.due;u.due=dueOf(s)}if(u.fee!==s.fee){freq=u.fee;u.fee=s.fee}}
+  {const jn=u.joined||s.joined,od=dueOf(s),same=u.due===od;
   if(same){u.paid=paidOf(s);u.extra=s.extra||0}
   else{let dd=u.due||od;if(dd<jn){alert('Next due date cannot be earlier than the admission date ('+jn+'). It has been set to the admission date.');dd=jn}let n=0;while(addM(jn,n)<dd&&n<600)n++;u.paid=n;u.extra=0}
   delete u.due}u.aadhar4=u.aadhar4.replace(/\D/g,'').slice(-4);
   const [photo,aadhar]=await Promise.all([shrink($('e_photo').files[0],500),shrink($('e_aad').files[0],1000)]),fl={};
   if(photo)fl.photo=photo;if(aadhar)fl.aadhar=aadhar;
   await updateDoc(doc(db,'students',id),u);if(photo||aadhar)await setDoc(doc(db,'studentFiles',id),fl,{merge:true});
+  const pend=[];if(jreq){await requestChange('joined',s,{old:s.joined,newJoined:jreq},s.name+': admission date '+s.joined+' → '+jreq);pend.push('admission date')}if(dreq){await requestChange('due',s,{newDue:dreq},s.name+': next due date '+dueOf(s)+' → '+dreq);pend.push('next due date')}if(freq!==null){await requestChange('fee',s,{newFee:freq},s.name+': monthly fee '+inr(s.fee)+' → '+inr(freq));pend.push('monthly fee')}
+  if(pend.length)alert('Other changes were saved. These were sent to the approver and apply only after approval: '+pend.join(', ')+'.');
   info(id)}catch(e){$('eem').textContent='';alert('Could not save: '+(e.code||e.message))}}
 Object.assign(window,{edit,saveEdit});
 
 async function toggle(id){const s=D.students.find(x=>x.id===id);try{await updateDoc(doc(db,'students',id),{active:!s.active})}catch(e){alert(e.code)}}
-async function del(id){if(!confirm('Move this student to the Recycle Bin? Details and fee history are kept, and you can restore them anytime.'))return;try{await updateDoc(doc(db,'students',id),{deleted:true,deletedAt:today()})}catch(e){alert(e.code||e.message)}}
+async function del(id){if(!confirm('Move this student to the Recycle Bin? Details and fee history are kept, and you can restore them anytime.'))return;try{if(ROLE!=='approver'){const s=D.students.find(x=>x.id===id);await requestChange('stu_del',s,{},s.name+': move to the Recycle Bin');return alert('Request sent to the approver. The student moves to the Recycle Bin only after approval.')}await updateDoc(doc(db,'students',id),{deleted:true,deletedAt:today()})}catch(e){alert(e.code||e.message)}}
 async function restoreStu(id){try{await updateDoc(doc(db,'students',id),{deleted:false,deletedAt:deleteField()});$('dg').close()}catch(e){alert(e.code||e.message)}}
 async function purge(id){const s=D.trash.find(x=>x.id===id);if(!confirm('Permanently delete '+(s?s.name:'this student')+'? Their details and uploaded documents cannot be recovered. Past payment records stay in the fee history.'))return;
  try{await deleteDoc(doc(db,'students',id));deleteDoc(doc(db,'studentFiles',id)).catch(()=>{});$('dg').close()}catch(e){alert(e.code||e.message)}}
 let tpg=0;
 function drawTrash(){if(!authed||!$('trash'))return;const L=[...D.trash].sort((a,b)=>(b.deletedAt||'').localeCompare(a.deletedAt||'')),pages=Math.max(1,Math.ceil(L.length/PER));tpg=Math.min(Math.max(0,tpg),pages-1);const r=L.slice(tpg*PER,tpg*PER+PER);
- $('trash').innerHTML=r.length?`<table><tr><th>Name</th><th>Mobile</th><th>Seat</th><th>Admission</th><th>Deleted On</th><th></th></tr>${r.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.phone||'')}</td><td>${esc(s.seat||'')}</td><td>${s.joined||''}</td><td>${s.deletedAt||''}</td><td><button class="btn o s" onclick="info('${s.id}')">Details</button> <button class="btn s" onclick="restoreStu('${s.id}')">Restore</button> <button class="btn r s" onclick="purge('${s.id}')">Delete forever</button></td></tr>`).join('')}</table>`:'<p class="mu">The recycle bin is empty.</p>';
+ $('trash').innerHTML=r.length?`<table><tr><th>Name</th><th>Mobile</th><th>Seat</th><th>Admission</th><th>Deleted On</th><th></th></tr>${r.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.phone||'')}</td><td>${esc(s.seat||'')}</td><td>${s.joined||''}</td><td>${s.deletedAt||''}</td><td><button class="btn o s" onclick="info('${s.id}')">Details</button> <button class="btn s" onclick="restoreStu('${s.id}')">Restore</button>${ROLE==='approver'?` <button class="btn r s" onclick="purge('${s.id}')">Delete forever</button>`:''}</td></tr>`).join('')}</table>`:'<p class="mu">The recycle bin is empty.</p>';
  $('tpi').textContent=`Page ${tpg+1} of ${pages} · ${L.length} deleted`}
 Object.assign(window,{restoreStu,purge,tPrev:()=>{tpg--;drawTrash()},tNext:()=>{tpg++;drawTrash()}});
 Object.assign(window,{go,login,forgot,logout,toggle,collect,del,render,draw:()=>draw()});
 function render(){const a=authed;$('login').classList.toggle('hide',a);$('panel').classList.toggle('hide',!a);if(!a)return;
+ $('rb').textContent=ROLE==='approver'?'Approver':'User';const pn=D.apr.filter(x=>x.status==='pending').length;$('aprn').textContent=pn;$('aprn').style.display=pn?'':'none';const ab=$('aban'),ap=ROLE==='approver'&&pn>0;ab.classList.toggle('hide',!ap);ab.textContent=pn+' request'+(pn>1?'s':'')+' waiting for your approval. Click to review.';document.title=(ap?'('+pn+') ':'')+'Nirmal Library, Bidhuna';
  const exm=D.exp.reduce((t,e)=>(e.date||'').startsWith(today().slice(0,7))?t+e.amt:t,0),col=D.pay.reduce((t,p)=>t+p.amt,0),m=today().slice(0,7),cm=D.pay.filter(p=>p.date.startsWith(m)).reduce((t,p)=>t+p.amt,0);
  const late=D.students.filter(s=>pending(s)>0),pen=late.reduce((t,s)=>t+pending(s),0),act=D.students.filter(s=>s.active).length;
  $('stats').innerHTML=[[inr(col),'Total fee collected'],[inr(cm),'Collected this month'],[`<span class="${pen?'late':''}">${inr(pen)}</span>`,'Fee pending'],[late.length,'Students with dues'],[act+' / '+D.students.length,'Active / total'],[inr(exm),'Expenses this month'],[`<span class="${cm-exm<0?'late':''}">${inr(cm-exm)}</span>`,'Net this month']].map(x=>`<div class="c"><div class="k">${x[0]}<small>${x[1]}</small></div></div>`).join('');
  late.sort((a,b)=>overdue(b)-overdue(a));
  const pp=Math.max(1,Math.ceil(late.length/PER));ppg=Math.min(Math.max(0,ppg),pp-1);
  $('pend').innerHTML=late.length?`<table><tr><th>Student</th><th>Seat</th><th>Pending</th><th>Oldest Due Date</th><th>Days Late</th><th></th></tr>${late.slice(ppg*PER,ppg*PER+PER).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.seat)}</td><td class="late">${inr(pending(s))} (${pmonths(s)} month(s)${s.credit?', ₹'+s.credit+' already paid':''})</td><td>${dueOf(s)}</td><td class="late">${overdue(s)} days</td><td><button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn o s" onclick="adjust('${s.id}')">Waive / Prorate</button></td></tr>`).join('')}</table><div class="pg"><button class="btn o s" onclick="pPrev()">‹ Prev</button><span>Page ${ppg+1} of ${pp} · ${late.length} students, total ${inr(pen)} pending</span><button class="btn o s" onclick="pNext()">Next ›</button></div>`:'<p style="color:var(--mu)">No pending fees 🎉</p>';
- rec();monthly();draw();drawExp();charts();drawTrash()}
+ rec();monthly();draw();drawExp();charts();drawTrash();drawApr()}
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function draw(){if(!authed)return;const q=$('q').value.toLowerCase();
  const L=D.students.filter(s=>!q||(s.name+s.phone+s.seat).toLowerCase().includes(q));
