@@ -77,6 +77,7 @@ th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}tr:hover td{ba
 <div id="aban" class="hide c" style="cursor:pointer;border-left:4px solid var(--ac2);margin-bottom:14px;font-weight:600" onclick="tab('apr')"></div>
 <div class="g" id="stats"></div>
 <div class="gc" id="charts"></div>
+<div class="c" style="margin-bottom:16px"><h3>Due Soon (next 3 days)</h3><div class="tw" id="soon"></div></div>
 <div class="c" style="margin-bottom:16px"><h3>Pending Fees</h3><div class="tw" id="pend"></div></div>
 <div class="c" style="margin-bottom:16px"><h3>Recent Fee Payments</h3><div class="tw" id="rec"></div></div>
 <div class="c" style="margin-bottom:16px"><div class="row"><h3>Month-wise Fee Collection</h3><input type="month" id="mm" style="max-width:170px" onchange="mSel()"></div><div class="tw" id="msum"></div><br><div id="mdet"></div><div class="pg"><button class="btn o s" onclick="mPrev()">‹ Prev</button><span id="mpi"></span><button class="btn o s" onclick="mNext()">Next ›</button></div></div>
@@ -148,6 +149,20 @@ const pcyc=s=>{const r=[];if(!s.active)return r;const e=cyc(s)-(s.extra||0);for(
 const pmonths=s=>pcyc(s).length;
 function overdue(s){return pmonths(s)>0?diff(today(),dueOf(s)):0}
 function pending(s){return Math.max(0,pcyc(s).reduce((t,c)=>t+cc(s,c),0)-(s.credit||0))}
+// ---- WhatsApp reminders (free, manual: opens WhatsApp with the message ready) ----
+const waNum=s=>{for(const v of [s.phone,s.phone2]){const d=String(v||'').replace(/\D/g,'').slice(-10);if(d.length===10)return'91'+d}return''};
+const remKey=id=>'rem_'+id,remGet=id=>{try{return localStorage.getItem(remKey(id))||''}catch(e){return''}},remSet=id=>{try{localStorage.setItem(remKey(id),today())}catch(e){}};
+const remBadge=id=>{const d=remGet(id);return d?`<div style="font-size:.72rem;color:var(--mu)">✔ Reminded ${d.slice(8)}-${d.slice(5,7)}</div>`:''};
+function remMsg(s){const n=s.name,pm=pmonths(s),d=dueOf(s);
+ if(pm>0)return`Namaste ${n} ji,\nNirmal Library mein aapki ${inr(pending(s))} fee (${pm} mahine) ${d} se pending hai. Kripya jald se jald jama kar dein.\nDhanyawad 🙏\n– Nirmal Library`;
+ const dd=diff(d,today()),when=dd<=0?'aaj':dd===1?'kal':dd+' din baad ('+d+')';
+ return`Namaste ${n} ji,\nNirmal Library mein aapki ${inr(s.fee)} fee ${when} due hai. Kripya samay par jama kar dein.\nDhanyawad 🙏\n– Nirmal Library`}
+function remind(id){const s=D.students.find(x=>x.id===id);if(!s)return;const n=waNum(s);
+ if(!n){alert(s.name+' ka sahi 10 digit mobile number nahi mila. Details > Edit mein number theek karein.');return}
+ window.open('https://wa.me/'+n+'?text='+encodeURIComponent(remMsg(s)),'_blank');remSet(id);render()}
+function drawSoon(){const el=$('soon');if(!el)return;
+ const r=D.students.filter(s=>s.active&&pmonths(s)===0&&(x=>x>=0&&x<=3)(diff(dueOf(s),today()))).sort((a,b)=>dueOf(a).localeCompare(dueOf(b)));
+ el.innerHTML=r.length?`<table><tr><th>Student</th><th>Seat</th><th>Fee</th><th>Due Date</th><th></th></tr>${r.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.seat)}</td><td>${inr(s.fee)}</td><td>${dueOf(s)}</td><td><button class="btn s" onclick="remind('${s.id}')">📲 Remind</button>${remBadge(s.id)}</td></tr>`).join('')}</table>`:'<p style="color:var(--mu)">Agle 3 din mein kisi ki fee due nahi hai.</p>'}
 const openDg=()=>{const d=$('dg');if(!d.open)d.showModal()};
 function rec(){const r=[...D.pay].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
  $('rec').innerHTML=r.length?`<table><tr><th>Date</th><th>Student</th><th>Amount</th><th>Mode</th><th></th></tr>${r.map(p=>`<tr><td>${p.date}</td><td>${esc(p.studentName||'')}</td><td>${inr(p.amt)}${pl(p)}</td><td>${esc(p.mode||'')}</td><td><button class="btn o s" onclick="editPay('${p.id}')">Edit</button></td></tr>`).join('')}</table>`:'<p style="color:var(--mu)">No payments yet.</p>'}
@@ -367,7 +382,7 @@ function drawTrash(){if(!authed||!$('trash'))return;const L=[...D.trash].sort((a
  $('trash').innerHTML=r.length?`<table><tr><th>Name</th><th>Mobile</th><th>Seat</th><th>Admission</th><th>Deleted On</th><th></th></tr>${r.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.phone||'')}</td><td>${esc(s.seat||'')}</td><td>${s.joined||''}</td><td>${s.deletedAt||''}</td><td><button class="btn o s" onclick="info('${s.id}')">Details</button> <button class="btn s" onclick="restoreStu('${s.id}')">Restore</button>${ROLE==='approver'?` <button class="btn r s" onclick="purge('${s.id}')">Delete forever</button>`:''}</td></tr>`).join('')}</table>`:'<p class="mu">The recycle bin is empty.</p>';
  $('tpi').textContent=`Page ${tpg+1} of ${pages} · ${L.length} deleted`}
 Object.assign(window,{restoreStu,purge,tPrev:()=>{tpg--;drawTrash()},tNext:()=>{tpg++;drawTrash()}});
-Object.assign(window,{go,login,forgot,logout,toggle,collect,del,render,draw:()=>draw()});
+Object.assign(window,{go,login,forgot,logout,toggle,collect,del,render,remind,draw:()=>draw()});
 function render(){const a=authed;$('login').classList.toggle('hide',a);$('panel').classList.toggle('hide',!a);if(!a)return;
  $('rb').textContent=ROLE==='approver'?'Approver':'User';const pn=D.apr.filter(x=>x.status==='pending').length;$('aprn').textContent=pn;$('aprn').style.display=pn?'':'none';const ab=$('aban'),ap=ROLE==='approver'&&pn>0;ab.classList.toggle('hide',!ap);ab.textContent=pn+' request'+(pn>1?'s':'')+' waiting for your approval. Click to review.';document.title=(ap?'('+pn+') ':'')+'Nirmal Library, Bidhuna';
  const exm=D.exp.reduce((t,e)=>(e.date||'').startsWith(today().slice(0,7))?t+e.amt:t,0),col=D.pay.reduce((t,p)=>t+p.amt,0),m=today().slice(0,7),cm=D.pay.filter(p=>p.date.startsWith(m)).reduce((t,p)=>t+p.amt,0);
@@ -375,14 +390,14 @@ function render(){const a=authed;$('login').classList.toggle('hide',a);$('panel'
  $('stats').innerHTML=[[inr(col),'Total fee collected'],[inr(cm),'Collected this month'],[`<span class="${pen?'late':''}">${inr(pen)}</span>`,'Fee pending'],[late.length,'Students with dues'],[act+' / '+D.students.length,'Active / total'],[inr(exm),'Expenses this month'],[`<span class="${cm-exm<0?'late':''}">${inr(cm-exm)}</span>`,'Net this month']].map(x=>`<div class="c"><div class="k">${x[0]}<small>${x[1]}</small></div></div>`).join('');
  late.sort((a,b)=>overdue(b)-overdue(a));
  const pp=Math.max(1,Math.ceil(late.length/PER));ppg=Math.min(Math.max(0,ppg),pp-1);
- $('pend').innerHTML=late.length?`<table><tr><th>Student</th><th>Seat</th><th>Pending</th><th>Oldest Due Date</th><th>Days Late</th><th></th></tr>${late.slice(ppg*PER,ppg*PER+PER).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.seat)}</td><td class="late">${inr(pending(s))} (${pmonths(s)} month(s)${s.credit?', ₹'+s.credit+' already paid':''})</td><td>${dueOf(s)}</td><td class="late">${overdue(s)} days</td><td><button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn o s" onclick="adjust('${s.id}')">Waive / Prorate</button></td></tr>`).join('')}</table><div class="pg"><button class="btn o s" onclick="pPrev()">‹ Prev</button><span>Page ${ppg+1} of ${pp} · ${late.length} students, total ${inr(pen)} pending</span><button class="btn o s" onclick="pNext()">Next ›</button></div>`:'<p style="color:var(--mu)">No pending fees 🎉</p>';
- rec();monthly();draw();drawExp();charts();drawTrash();drawApr()}
+ $('pend').innerHTML=late.length?`<table><tr><th>Student</th><th>Seat</th><th>Pending</th><th>Oldest Due Date</th><th>Days Late</th><th></th></tr>${late.slice(ppg*PER,ppg*PER+PER).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.seat)}</td><td class="late">${inr(pending(s))} (${pmonths(s)} month(s)${s.credit?', ₹'+s.credit+' already paid':''})</td><td>${dueOf(s)}</td><td class="late">${overdue(s)} days</td><td><button class="btn s" onclick="remind('${s.id}')">📲 Remind</button> <button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn o s" onclick="adjust('${s.id}')">Waive / Prorate</button>${remBadge(s.id)}</td></tr>`).join('')}</table><div class="pg"><button class="btn o s" onclick="pPrev()">‹ Prev</button><span>Page ${ppg+1} of ${pp} · ${late.length} students, total ${inr(pen)} pending</span><button class="btn o s" onclick="pNext()">Next ›</button></div>`:'<p style="color:var(--mu)">No pending fees 🎉</p>';
+ rec();monthly();draw();drawExp();charts();drawTrash();drawApr();drawSoon()}
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function draw(){if(!authed)return;const q=$('q').value.toLowerCase();
  const L=D.students.filter(s=>!q||(s.name+s.phone+s.seat).toLowerCase().includes(q));
  const pages=Math.max(1,Math.ceil(L.length/PER));pgn=Math.min(Math.max(0,pgn),pages-1);
  const r=L.slice(pgn*PER,pgn*PER+PER);
- $('list').innerHTML=r.length?`<table><tr><th>Name</th><th>Phone</th><th>Seat</th><th>Fee</th><th>Next due</th><th>Status</th><th>Actions</th></tr>${r.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.phone)}</td><td>${esc(s.seat)}</td><td>${inr(s.fee)}</td><td class="${overdue(s)?'late':''}">${dueOf(s)}${overdue(s)?' — '+overdue(s)+' days late ('+pmonths(s)+' month(s) due)':''}${s.credit?' · ₹'+s.credit+' partial paid':''}</td><td><span class="b ${s.active?'on':'off'}">${s.active?'Active':'Inactive'}</span></td><td><button class="btn o s" onclick="toggle('${s.id}')">${s.active?'Mark inactive':'Mark active'}</button> <button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn o s" onclick="adjust('${s.id}')">Waive / Prorate</button> <button class="btn o s" onclick="info('${s.id}')">Details</button> <button class="btn r s" onclick="del('${s.id}')">✕</button></td></tr>`).join('')}</table>`:'<p style="color:var(--mu)">No students yet. Click “+ New Admission” to add your first student.</p>';
+ $('list').innerHTML=r.length?`<table><tr><th>Name</th><th>Phone</th><th>Seat</th><th>Fee</th><th>Next due</th><th>Status</th><th>Actions</th></tr>${r.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.phone)}</td><td>${esc(s.seat)}</td><td>${inr(s.fee)}</td><td class="${overdue(s)?'late':''}">${dueOf(s)}${overdue(s)?' — '+overdue(s)+' days late ('+pmonths(s)+' month(s) due)':''}${s.credit?' · ₹'+s.credit+' partial paid':''}</td><td><span class="b ${s.active?'on':'off'}">${s.active?'Active':'Inactive'}</span></td><td><button class="btn o s" onclick="toggle('${s.id}')">${s.active?'Mark inactive':'Mark active'}</button> ${overdue(s)?`<button class="btn s" onclick="remind('${s.id}')">📲 Remind</button> `:''}<button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn o s" onclick="adjust('${s.id}')">Waive / Prorate</button> <button class="btn o s" onclick="info('${s.id}')">Details</button> <button class="btn r s" onclick="del('${s.id}')">✕</button></td></tr>`).join('')}</table>`:'<p style="color:var(--mu)">No students yet. Click “+ New Admission” to add your first student.</p>';
  $('pi').textContent=`Page ${pgn+1} of ${pages} · ${L.length} students`}
 buildForm();buildExp();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
