@@ -2,6 +2,10 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nirmal Library, Bidhuna</title>
+<meta name="theme-color" content="#1f5f4a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root{--bg:#fbf8f2;--card:#fff;--tx:#23201b;--mu:#6d665b;--ac:#1f5f4a;--ac2:#c9892b;--bd:#e5dfd2;--bad:#b3402f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171612;--card:#201e19;--tx:#efe9dc;--mu:#a39b8b;--ac:#4fb48f;--ac2:#e0a447;--bd:#38342b;--bad:#e5776a}}
@@ -381,5 +385,7 @@ function draw(){if(!authed)return;const q=$('q').value.toLowerCase();
  $('list').innerHTML=r.length?`<table><tr><th>Name</th><th>Phone</th><th>Seat</th><th>Fee</th><th>Next due</th><th>Status</th><th>Actions</th></tr>${r.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.phone)}</td><td>${esc(s.seat)}</td><td>${inr(s.fee)}</td><td class="${overdue(s)?'late':''}">${dueOf(s)}${overdue(s)?' — '+overdue(s)+' days late ('+pmonths(s)+' month(s) due)':''}${s.credit?' · ₹'+s.credit+' partial paid':''}</td><td><span class="b ${s.active?'on':'off'}">${s.active?'Active':'Inactive'}</span></td><td><button class="btn o s" onclick="toggle('${s.id}')">${s.active?'Mark inactive':'Mark active'}</button> <button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn o s" onclick="adjust('${s.id}')">Waive / Prorate</button> <button class="btn o s" onclick="info('${s.id}')">Details</button> <button class="btn r s" onclick="del('${s.id}')">✕</button></td></tr>`).join('')}</table>`:'<p style="color:var(--mu)">No students yet. Click “+ New Admission” to add your first student.</p>';
  $('pi').textContent=`Page ${pgn+1} of ${pages} · ${L.length} students`}
 buildForm();buildExp();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(matchMedia('(display-mode: standalone)').matches||/[?&]app=1/.test(location.search))go('admin');
 window.pgPrev=()=>{pgn--;draw()};window.pgNext=()=>{pgn++;draw()};window.search=()=>{pgn=0;draw()};
 </script></body></html>
