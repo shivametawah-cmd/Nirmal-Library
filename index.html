@@ -108,6 +108,13 @@ th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}tr:hover td{ba
 </div>
 <div id="t_seat" class="hide"><div class="c"><div class="row"><h3>Seat map</h3><span><label style="display:inline">Total seats</label> <input id="sc_n" type="number" min="0" style="width:90px;display:inline-block"> <button class="btn s" onclick="saveSeats()">Save</button></span></div><p id="sc_s" class="mu"></p><div id="sc_g" style="display:flex;flex-wrap:wrap;gap:6px"></div><p class="mu">Filled = occupied by an active student, outlined = free. Click a free seat to admit a student on it; click an occupied seat for details.</p></div></div>
 <div id="t_bk" class="hide"><div class="c" style="margin-bottom:16px"><h3>Backup</h3><p id="bk_i" class="mu"></p><button class="btn" onclick="makeBackup()">⬇ Download full backup (Excel)</button><p id="bk_m" class="mu"></p></div>
+<div class="c" style="margin-bottom:16px"><h3>Google Drive backup</h3><p id="gd_s" class="mu"></p>
+<div id="gd_setup" class="hide"><p class="mu" style="margin:8px 0">One-time setup: paste your Google OAuth Client ID.</p><div class="row" style="justify-content:flex-start"><input id="gd_cid" placeholder="xxxxxxxx.apps.googleusercontent.com" style="max-width:400px"><button class="btn s" onclick="gdSaveCid()">Save</button></div>
+<details class="mu" style="margin-top:8px"><summary style="cursor:pointer">How to get a Client ID (5 minutes, free)</summary><ol style="line-height:1.7"><li>Open <b>console.cloud.google.com</b> and create a new project (e.g. Nirmal Library).</li><li>APIs &amp; Services &gt; Library &gt; search <b>Google Drive API</b> &gt; Enable.</li><li>APIs &amp; Services &gt; OAuth consent screen &gt; External &gt; fill app name and your email &gt; Save. Then click <b>Publish app</b> (otherwise Google asks you to reconnect every 7 days).</li><li>Credentials &gt; Create credentials &gt; <b>OAuth client ID</b> &gt; Web application.</li><li>Under <b>Authorized JavaScript origins</b> add this site's address exactly (e.g. https://yourdomain.com, no slash at the end).</li><li>Create, copy the Client ID and paste it above.</li></ol></details></div>
+<div id="gd_conn" class="hide"><button class="btn" onclick="gdConnect()">🔗 Connect Google Drive</button> <button class="btn o s" onclick="gdResetCid()" id="gd_rc">Change Client ID</button></div>
+<div id="gd_act" class="hide"><div class="row" style="justify-content:flex-start"><button class="btn" onclick="gdBackupNow()">☁ Upload backup to Google Drive</button><button class="btn o s" onclick="gdDisconnect()">Disconnect</button></div>
+<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:.85rem"><input type="checkbox" id="gd_auto" onchange="gdAuto(this.checked)" style="width:auto"> Also upload to Google Drive whenever I download a backup</label></div>
+<p id="gd_m" class="mu"></p></div>
 <div class="c" style="margin-bottom:16px"><h3>Restore from backup</h3><p class="mu">Only missing students, payments and expenses are added. Existing records are never changed.</p><div class="row" style="justify-content:flex-start"><input type="file" id="rf" accept=".xlsx" style="max-width:260px"><button class="btn s" onclick="restoreBackup()">Restore missing</button></div><p id="rm" class="mu"></p></div>
 <div class="c"><h3>Account</h3><div class="f"><div><label>Theme</label><select id="ac_th" onchange="setTheme(this.value)"><option value="auto">Auto</option><option value="light">Light</option><option value="dark">Dark</option></select></div><div><label>Current password</label><input id="ac_cp" type="password" autocomplete="current-password"></div><div><label>New password (min 8)</label><input id="ac_np" type="password" autocomplete="new-password"></div></div><br><button class="btn s" onclick="changePw()">Change password</button><p id="ac_m" class="mu"></p><p class="mu">You are logged out automatically after 30 minutes of inactivity.</p></div></div>
 <div id="t_apr" class="hide"><div class="c"><div class="row"><h3>Approval Requests</h3><span class="mu" id="aprh"></span></div><div class="tw" id="aprl"></div><div class="pg"><button class="btn o s" onclick="aPrev()">‹ Prev</button><span id="apri"></span><button class="btn o s" onclick="aNext()">Next ›</button></div></div></div>
@@ -116,7 +123,8 @@ th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}tr:hover td{ba
 <dialog id="dg" style="max-width:520px;width:92%;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:12px;font-family:system-ui,sans-serif"><div id="dgc"></div><br><button class="btn s" onclick="document.getElementById('dg').close()">Close</button></dialog>
 <dialog id="adm" style="max-width:780px;width:94%;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:12px;font-family:system-ui,sans-serif"><div class="row"><h3 style="margin:0">New Admission</h3><button class="btn o s" onclick="closeAdm()">✕ Close</button></div><br><div class="f" id="af"></div><br><button class="btn" onclick="admit()">Admit Student</button> <span id="am"></span></dialog>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<footer>© Nirmal Library, Bidhuna</footer></div>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<footer>© Nirmal Library, Bidhuna · <a href="privacy.html" style="color:inherit">Privacy Policy</a> · <a href="terms.html" style="color:inherit">Terms of Service</a></footer></div>
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,updatePassword,reauthenticateWithCredential,EmailAuthProvider}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -395,7 +403,7 @@ function render(){const a=authed;$('login').classList.toggle('hide',a);$('panel'
  late.sort((a,b)=>overdue(b)-overdue(a));
  const pp=Math.max(1,Math.ceil(late.length/PER));ppg=Math.min(Math.max(0,ppg),pp-1);
  $('pend').innerHTML=late.length?`<table><tr><th>Student</th><th>Seat</th><th>Pending</th><th>Oldest Due Date</th><th>Days Late</th><th></th></tr>${late.slice(ppg*PER,ppg*PER+PER).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.seat)}</td><td class="late">${inr(pending(s))} (${pmonths(s)} month(s)${s.credit?', ₹'+s.credit+' already paid':''})</td><td>${dueOf(s)}</td><td class="late">${overdue(s)} days</td><td><button class="btn s" onclick="remind('${s.id}')">📲 Remind</button> <button class="btn s" onclick="collect('${s.id}')">Collect</button> <button class="btn o s" onclick="adjust('${s.id}')">Waive / Prorate</button>${remBadge(s.id)}</td></tr>`).join('')}</table><div class="pg"><button class="btn o s" onclick="pPrev()">‹ Prev</button><span>Page ${ppg+1} of ${pp} · ${late.length} students, total ${inr(pen)} pending</span><button class="btn o s" onclick="pNext()">Next ›</button></div>`:'<p style="color:var(--mu)">No pending fees 🎉</p>';
- rec();monthly();draw();drawExp();charts();drawTrash();drawApr();drawSoon();drawSeats();bkUI()}
+ rec();monthly();draw();drawExp();charts();drawTrash();drawApr();drawSoon();drawSeats();bkUI();driveUI()}
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function draw(){if(!authed)return;const q=$('q').value.toLowerCase();
  const L=D.students.filter(s=>!q||(s.name+s.phone+s.seat).toLowerCase().includes(q));
@@ -420,11 +428,12 @@ async function saveSeats(){const n=Math.max(0,Math.floor(+$('sc_n').value||0));S
 function pickSeat(n){buildForm();$('f_seat').value=n;$('am').textContent='';$('adm').showModal()}
 const bkGet=()=>{try{return +localStorage.getItem('nl_bk')||0}catch(e){return 0}};
 function bkUI(){const e=$('bk_i');if(!e)return;const t=bkGet(),d=t?Math.floor((Date.now()-t)/864e5):-1;e.innerHTML=t?`Last backup on this device: ${new Date(t).toLocaleDateString('en-IN')} (${d} day(s) ago).`+(d>=7?' <b class="late">A new backup is due. Please download one.</b>':''):'<b class="late">No backup downloaded on this device yet.</b>'}
-function makeBackup(){const rows=(a,f)=>a.map(x=>{const{id,createdAt,...r}=x;return{ID:id,...f(x),Data:JSON.stringify(r)}}),wb=XLSX.utils.book_new();
+function bkBook(){const rows=(a,f)=>a.map(x=>{const{id,createdAt,...r}=x;return{ID:id,...f(x),Data:JSON.stringify(r)}}),wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows(D.students.concat(D.trash),s=>({Name:s.name,Mobile:s.phone,Seat:s.seat||'',Fee:s.fee,Joined:s.joined,Status:s.deleted?'Deleted':s.active?'Active':'Inactive'}))),'Students');
  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows(D.pay,p=>({Date:p.date,Student:p.studentName,Amount:p.amt,Mode:p.mode||''}))),'Payments');
  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows(D.exp,e=>({Date:e.date,Category:e.cat,Description:e.desc||'',Amount:e.amt}))),'Expenses');
- XLSX.writeFile(wb,'nirmal-library-backup-'+today()+'.xlsx');try{localStorage.setItem('nl_bk',Date.now())}catch(e){}$('bk_m').textContent='Backup saved: '+D.students.length+' students ('+D.trash.length+' in recycle bin), '+D.pay.length+' payments, '+D.exp.length+' expenses. Check your Downloads folder. (Uploaded photos/Aadhaar images are not included.)';bkUI()}
+ return wb}
+function makeBackup(){const wb=bkBook();XLSX.writeFile(wb,'nirmal-library-backup-'+today()+'.xlsx');try{localStorage.setItem('nl_bk',Date.now())}catch(e){}$('bk_m').textContent='Backup saved: '+D.students.length+' students ('+D.trash.length+' in recycle bin), '+D.pay.length+' payments, '+D.exp.length+' expenses. Check your Downloads folder. (Uploaded photos/Aadhaar images are not included.)';bkUI();if(gLS('nl_gdauto')==='1'&&gLS('nl_gd')==='1')gdUpload(wb)}
 async function restoreBackup(){const f=$('rf').files[0],m=$('rm');if(!f){m.textContent='Choose a backup file first.';return}
  try{const wb=XLSX.read(await f.arrayBuffer(),{type:'array'}),sh=n=>wb.Sheets[n]?XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:''}):null,S=sh('Students'),P=sh('Payments'),E=sh('Expenses');
   if(!S||!P||!E){m.textContent='This is not a Nirmal Library backup file.';return}
@@ -442,7 +451,47 @@ async function changePw(){const m=$('ac_m'),u=auth.currentUser,cp=$('ac_cp').val
  try{await reauthenticateWithCredential(u,EmailAuthProvider.credential(u.email,cp));await updatePassword(u,np);$('ac_cp').value=$('ac_np').value='';m.textContent='Password changed.'}catch(e){m.textContent='Could not change password ('+(e.code||e.message)+').'}}
 let lastAct=Date.now();['click','keydown','touchstart','mousemove'].forEach(ev=>addEventListener(ev,()=>{lastAct=Date.now()},{passive:true}));
 setInterval(()=>{if(authed&&Date.now()-lastAct>30*60*1000){signOut(auth);alert('You were logged out after 30 minutes of inactivity.')}},60000);
-Object.assign(window,{rcpt,saveSeats,pickSeat,makeBackup,restoreBackup,setTheme,changePw});
+// ---- Google Drive backup ----
+const GCID='546292297129-mu1omfsj53f7nmo4pvvp1u7344sv840g.apps.googleusercontent.com'; // optional: paste your Google OAuth Client ID here, or enter it in the app (Backup & Account tab)
+const gLS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);v===null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){return null}};
+const gCid=()=>GCID||gLS('nl_gcid')||'';let gTok=null,gExp=0;
+function driveUI(){const s=$('gd_s');if(!s)return;const cid=gCid(),on=gLS('nl_gd')==='1',t=+gLS('nl_gdt')||0;
+ $('gd_setup').classList.toggle('hide',!!cid);$('gd_conn').classList.toggle('hide',!cid||on);$('gd_act').classList.toggle('hide',!(cid&&on));$('gd_rc').classList.toggle('hide',!!GCID);
+ if(document.activeElement!==$('gd_auto'))$('gd_auto').checked=gLS('nl_gdauto')==='1';
+ s.textContent=!cid?'Not set up yet.':!on?'Not connected.':'Connected. Backups are saved in the "Nirmal Library Backups" folder of your Google Drive.'+(t?' Last upload: '+new Date(t).toLocaleString('en-IN')+'.':' No upload yet.')}
+function gdSaveCid(){const v=$('gd_cid').value.trim(),m=$('gd_m');if(!/^[\w.-]+\.apps\.googleusercontent\.com$/.test(v)){m.textContent='That does not look like a Client ID. It ends with .apps.googleusercontent.com';return}gLS('nl_gcid',v);m.textContent='Client ID saved. Now click Connect Google Drive.';driveUI()}
+function gdResetCid(){gLS('nl_gcid',null);gLS('nl_gd',null);gTok=null;gExp=0;$('gd_cid').value='';$('gd_m').textContent='';driveUI()}
+function gdToken(){return new Promise((res,rej)=>{
+ if(gTok&&Date.now()<gExp-60000)return res(gTok);
+ if(!window.google||!google.accounts)return rej(new Error('Google sign-in script did not load. Check your internet connection and reload the page.'));
+ const cid=gCid();if(!cid)return rej(new Error('Add your Google Client ID first.'));
+ const c=google.accounts.oauth2.initTokenClient({client_id:cid,scope:'https://www.googleapis.com/auth/drive.file',
+  callback:r=>{if(r.error)return rej(new Error(r.error_description||r.error));gTok=r.access_token;gExp=Date.now()+(+r.expires_in||3600)*1000;gLS('nl_gd','1');res(gTok)},
+  error_callback:e=>rej(new Error(e.type==='popup_failed_to_open'?'Popup blocked. Allow popups for this site and try again.':e.type==='popup_closed'?'The Google window was closed before finishing.':(e.message||e.type||'Google sign-in failed')))});
+ c.requestAccessToken({prompt:gLS('nl_gd')==='1'?'':'consent'})})}
+async function gdConnect(){const m=$('gd_m');m.textContent='Opening Google sign-in…';try{await gdToken();m.textContent='Google Drive connected.'}catch(e){m.textContent='Could not connect: '+e.message}driveUI()}
+function gdDisconnect(){if(!confirm('Disconnect Google Drive? Backups already in Drive stay there.'))return;try{if(gTok&&window.google)google.accounts.oauth2.revoke(gTok)}catch(e){}gTok=null;gExp=0;gLS('nl_gd',null);gLS('nl_gdauto',null);gLS('nl_gdf',null);$('gd_m').textContent='Google Drive disconnected.';driveUI()}
+function gdAuto(v){gLS('nl_gdauto',v?'1':null)}
+async function gdFolder(tok){const H={Authorization:'Bearer '+tok},FN='Nirmal Library Backups',A='https://www.googleapis.com/drive/v3/files';let id=gLS('nl_gdf');
+ if(id){try{const r=await fetch(A+'/'+id+'?fields=id,trashed',{headers:H});if(r.ok&&!(await r.json()).trashed)return id}catch(e){}}
+ let r=await fetch(A+'?q='+encodeURIComponent("name='"+FN+"' and mimeType='application/vnd.google-apps.folder' and trashed=false")+'&fields=files(id)',{headers:H});
+ if(r.status===401){gTok=null;gExp=0}if(!r.ok)throw new Error('Google Drive error '+r.status+(r.status===403?' (is the Google Drive API enabled in your project?)':''));
+ const j=await r.json();
+ if(j.files&&j.files[0])id=j.files[0].id;else{r=await fetch(A+'?fields=id',{method:'POST',headers:{...H,'Content-Type':'application/json'},body:JSON.stringify({name:FN,mimeType:'application/vnd.google-apps.folder'})});if(!r.ok)throw new Error('Could not create Drive folder ('+r.status+')');id=(await r.json()).id}
+ gLS('nl_gdf',id);return id}
+async function gdUpload(wb){const m=$('gd_m');m.textContent='Uploading to Google Drive…';
+ try{const tok=await gdToken(),fid=await gdFolder(tok),name='nirmal-library-backup-'+today()+'-'+new Date().toTimeString().slice(0,5).replace(':','')+'.xlsx',
+  buf=XLSX.write(wb,{type:'array',bookType:'xlsx'}),fd=new FormData();
+  fd.append('metadata',new Blob([JSON.stringify({name,parents:[fid]})],{type:'application/json'}));
+  fd.append('file',new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',{method:'POST',headers:{Authorization:'Bearer '+tok},body:fd});
+  if(r.status===401){gTok=null;gExp=0;throw new Error('Session expired. Please click the upload button again.')}
+  if(!r.ok)throw new Error('Google Drive error '+r.status);
+  gLS('nl_gdt',Date.now());try{localStorage.setItem('nl_bk',Date.now())}catch(e){}
+  m.innerHTML='✔ Uploaded <b>'+esc(name)+'</b> to Google Drive. <a href="https://drive.google.com/drive/folders/'+fid+'" target="_blank" rel="noopener" style="color:var(--ac)">Open folder</a>';bkUI();driveUI()}
+ catch(e){m.textContent='Upload failed: '+e.message}}
+function gdBackupNow(){gdUpload(bkBook())}
+Object.assign(window,{rcpt,saveSeats,pickSeat,makeBackup,restoreBackup,setTheme,changePw,gdSaveCid,gdResetCid,gdConnect,gdDisconnect,gdAuto,gdBackupNow});
 buildForm();buildExp();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 if(matchMedia('(display-mode: standalone)').matches||/[?&]app=1/.test(location.search))go('admin');
