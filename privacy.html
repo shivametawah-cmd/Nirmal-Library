@@ -18,7 +18,7 @@ nav{border-bottom:1px solid var(--bd);padding-bottom:10px;margin-bottom:10px;fon
 
 <h2>Information we handle</h2>
 <ul>
-<li><b>Library records</b> entered by the admin: student names, mobile numbers, seat numbers, fee and payment details, expenses, and optional uploaded photos or ID images.</li>
+<li><b>Library records</b> entered by the admin: student names, mobile numbers, seat numbers, fee and payment details, expenses, and, for every admission, a photo of the student and the front and back of their Aadhaar card. These images are resized and converted to compressed WebP files before they are saved.</li>
 <li><b>Admin login details</b>: the admin email address and password, handled by Firebase Authentication (Google).</li>
 <li><b>Settings stored in your browser</b>: theme, seat count, and the time of your last backup (browser local storage).</li>
 </ul>
@@ -32,7 +32,7 @@ nav{border-bottom:1px solid var(--bd);padding-bottom:10px;margin-bottom:10px;fon
 <h2>Google Drive backup</h2>
 <p>If the admin chooses <b>Connect Google Drive</b>, the app asks for the permission <code>drive.file</code>. With it the app can only create and access files that it created itself. It cannot see, read or change any other file in your Google Drive.</p>
 <ul>
-<li>The app uses this permission only to create a folder called "Nirmal Library Backups" and upload backup (Excel) files into it, at the admin's request.</li>
+<li>The app uses this permission only to create a folder called "Nirmal Library Backups" and upload backup files into it, at the admin's request. A backup is a ZIP file containing the Excel data plus the students' photos and Aadhaar card images, so keep your Drive account secure.</li>
 <li>Backup files go directly from your browser to your own Google Drive. They do not pass through any server of ours.</li>
 <li>The Google access token is kept in your browser's memory only for the current session and is not stored on any server.</li>
 <li>You can disconnect at any time using the <b>Disconnect</b> button in the app, or at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
